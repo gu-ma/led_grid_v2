@@ -1,0 +1,42 @@
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# other
+*.mov
+*.sqlite3
+*.mp3
+*.m4v
+
+#folders
+/bin/data/output/
+/bin/data/vids/
+
+#other
+SF2017_test.xcodeproj/project.xcworkspace/xcuserdata/guillaume.xcuserdatad/UserInterfaceState.xcuserstate
