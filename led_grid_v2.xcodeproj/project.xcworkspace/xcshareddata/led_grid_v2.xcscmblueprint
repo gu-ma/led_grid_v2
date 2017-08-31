@@ -1,0 +1,58 @@
+{
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "FD7A2B89530BD82EBC2203E9CB0EF5DCD99A3FD5",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "FD7A2B89530BD82EBC2203E9CB0EF5DCD99A3FD5" : 9223372036854775807,
+    "4131F34236DEB94090351DE98CD44A123F2873AB" : 9223372036854775807,
+    "55505DE6675E1AEB4CF72AD63A972936EC984D97" : 9223372036854775807,
+    "37526DA425E5430474A14FBFA1BC4525160B5FC1" : 9223372036854775807,
+    "3408B309914B0639E8D618139E80EF3032A46163" : 9223372036854775807,
+    "E0535550E19824754C404DB0DDE5EC8ABB043726" : 9223372036854775807
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "AFACF620-4114-4E4F-832E-FA10BAD3318B",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "FD7A2B89530BD82EBC2203E9CB0EF5DCD99A3FD5" : "led_grid_v2\/",
+    "4131F34236DEB94090351DE98CD44A123F2873AB" : "..\/..\/addons\/ofxVideoRecorder",
+    "55505DE6675E1AEB4CF72AD63A972936EC984D97" : "..\/..\/addons\/ofxImGui",
+    "37526DA425E5430474A14FBFA1BC4525160B5FC1" : "..\/..\/addons\/ofxCv",
+    "3408B309914B0639E8D618139E80EF3032A46163" : "..\/..\/addons\/ofxFaceTracker2",
+    "E0535550E19824754C404DB0DDE5EC8ABB043726" : "..\/..\/addons\/ofxTimer"
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "led_grid_v2",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 204,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "led_grid_v2.xcodeproj",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/gu-ma\/ofxFaceTracker2.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "3408B309914B0639E8D618139E80EF3032A46163"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:kylemcdonald\/ofxCv.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "37526DA425E5430474A14FBFA1BC4525160B5FC1"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/timscaffidi\/ofxVideoRecorder.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "4131F34236DEB94090351DE98CD44A123F2873AB"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/jvcleave\/ofxImGui.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "55505DE6675E1AEB4CF72AD63A972936EC984D97"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/fx-lange\/ofxTimer.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "E0535550E19824754C404DB0DDE5EC8ABB043726"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/gu-ma\/led_grid_v2.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "FD7A2B89530BD82EBC2203E9CB0EF5DCD99A3FD5"
+    }
+  ]
+}

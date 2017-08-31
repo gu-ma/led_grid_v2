@@ -39,4 +39,5 @@
 /bin/data/vids/
 
 #other
-SF2017_test.xcodeproj/project.xcworkspace/xcuserdata/guillaume.xcuserdatad/UserInterfaceState.xcuserstate
+**/led_grid_v2.xcodeproj/project.xcworkspace/xcuserdata/
+**/led_grid_v2.xcodeproj/project.xcworkspace/xcshareddata/
