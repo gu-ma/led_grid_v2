@@ -15,7 +15,7 @@ public:
     cv::Mat greyImg, labImg, claheImg, tmpImg;
     
     template <class S, class D>
-    void filter(S& src, D& dst, int clipLimit, bool isColor) {
+    void filter(S &src, D &dst, int clipLimit, bool isColor) {
         cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE();
         clahe->setClipLimit(clipLimit);
         if (!isColor) {

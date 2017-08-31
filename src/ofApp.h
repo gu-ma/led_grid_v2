@@ -24,7 +24,7 @@ public:
     
     // General
     void initVar();
-    bool isIdle, facesFound, lockedFaceFound, faceLocked, showGrid, showText, newFrame;
+    bool isIdle, facesFound, faceLocked, lockedFaceFound, showGrid, showText, newFrame;
     
     // Capture
     ofVideoGrabber grabber;
@@ -59,12 +59,8 @@ public:
     // Sorting utils - sort by first element cresc
     struct byFirst {
         template <class First, class Second>
-        bool operator()(std::pair<First, Second> const &a, std::pair<First, Second> const &b) {
-            return a.first < b.first;
-        }
+        bool operator()(std::pair<First, Second> const &a, std::pair<First, Second> const &b) { return a.first < b.first; }
     };
-    // TEMP
-    ofImage facePart;
 
     // GUI
     ofxImGui::Gui gui;
@@ -77,10 +73,9 @@ public:
     
     // video recording
     ofxVideoRecorder vidRecorder;
-    bool isRecording;
     string faceVideoPath;
     void initVidRecorder();
-    void vidRecordingComplete(ofxVideoRecorderOutputFileCompleteEventArgs& args);
+    void vidRecordingComplete(ofxVideoRecorderOutputFileCompleteEventArgs &args);
     
 };
 

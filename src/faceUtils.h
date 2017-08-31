@@ -7,53 +7,23 @@
 //  http://www.pyimagesearch.com/2017/05/22/face-alignment-with-opencv-and-python/
 //  https://github.com/MasteringOpenCV/code/blob/master/Chapter8_FaceRecognition/preprocessFace.cpp
 //
-//
+// Improvment:
+// . Get avg box width ratio
+// . Create a proper class including the srcImg and FacetrackerInstance
+// . Add an alias system for landmarks (faceOutline, leftEye, rightEye, mouth, nose)
 
 #ifndef faceUtils_h
 #define faceUtils_h
 
 class faceUtils {
     
-private:
-    
-    int iterations = 1;
-    // Total landmarks position in pct of the img (pctX, pctY).
-    // Order: faceOutline, leftEye, rightEye, mouth, nose
-    vector<ofVec2f> totalLandmarksPos;
-    //
-    // Total landmarks position in pct of the img (pctX, pctY).
-    // Order: faceOutline, leftEye, rightEye, mouth, nose
-    vector<deque<ofVec2f>> landmarksPosHistory;
-    int landmarksPosHistoryLength = 10;
-    // Average landmarks position in pct of the img (pctX, pctY).
-    // Order: faceOutline, leftEye, rightEye, mouth, nose
-    vector<ofVec2f> avgLandmarksPos;
-    //
-    ofImage srcImg;
-    // Find a way to get avg box width ratio
-    
 public:
     
-    const int indexFaceOutline = 0;
-    const int indexLeftEye = 1;
-    const int indexRightEye = 2;
-    const int indexMouth = 3;
-    const int indexNose = 4;
-
     faceUtils(){
-        resetLandmarksAverage();
+        landmarksPosHistory.assign(5,deque<ofVec2f>());
+        avgLandmarksPos.assign(5,ofVec2f(0,0));
     };
     ~faceUtils(){};
-
-    
-    //--------------------------------------------------------------
-    void resetLandmarksAverage(){
-        iterations = 0;
-        landmarksPosHistory.assign(5,deque<ofVec2f>());
-        totalLandmarksPos.assign(5,ofVec2f(0,0));
-        avgLandmarksPos.assign(5,ofVec2f(0,0));
-    }
-
     
     //--------------------------------------------------------------
     void updateLandmarksAverage(ofxFaceTracker2Instance &instance){
@@ -83,25 +53,8 @@ public:
             avgLandmarksPos.at(i) = t / landmarksPosHistory.at(i).size();
         }
 
-//        //
-//        if ( iterations == 0 ) {
-//            totalLandmarksPos.assign(avgLandmarksPos.begin(), avgLandmarksPos.end());
-//            iterations = 1;
-//        } else {
-//            totalLandmarksPos.at(0) += getPct(instance.getLandmarks().getImageFeature(ofxFaceTracker2Landmarks::FACE_OUTLINE), rect);
-//            totalLandmarksPos.at(1) += getPct(instance.getLandmarks().getImageFeature(ofxFaceTracker2Landmarks::LEFT_EYE), rect);
-//            totalLandmarksPos.at(2) += getPct(instance.getLandmarks().getImageFeature(ofxFaceTracker2Landmarks::RIGHT_EYE), rect);
-//            totalLandmarksPos.at(3) += getPct(instance.getLandmarks().getImageFeature(ofxFaceTracker2Landmarks::OUTER_MOUTH), rect);
-//            totalLandmarksPos.at(4) += getPct(instance.getLandmarks().getImageFeature(ofxFaceTracker2Landmarks::NOSE_BRIDGE), rect);
-//        }
-//        
-//        //
-//        for (unsigned i = 0; i < avgLandmarksPos.size(); i++) {
-//            avgLandmarksPos.at(i) = totalLandmarksPos.at(i) / iterations;
-//        }
-//        
-//        iterations = (iterations+1)%10;
     }
+
     
     //--------------------------------------------------------------
     ofImage getAlignedFace(ofImage &srcImg, ofxFaceTracker2Instance &instance,
@@ -179,7 +132,8 @@ public:
     
     
     //--------------------------------------------------------------
-    ofImage getLandmarkImg(ofImage &srcImg, ofxFaceTracker2Instance &instance, int index, int desiredWidth, int sizePct = 30, bool useAvg = true){
+    ofImage getLandmarkImg(ofImage &srcImg, const ofxFaceTracker2Instance &instance,
+                           int index, int desiredWidth, int sizePct = 30, bool useAvg = true){
         
         // get face bounding box
         ofRectangle rect = instance.getBoundingBox();
@@ -205,11 +159,20 @@ public:
         return img;
     
     }
+
+private:
     
+    // Total landmarks position in pct of the img (pctX, pctY).
+    // Order: faceOutline, leftEye, rightEye, mouth, nose
+    vector<deque<ofVec2f>> landmarksPosHistory;
+    int landmarksPosHistoryLength = 10;
+    // Average landmarks position in pct of the img (pctX, pctY).
+    // Order: faceOutline, leftEye, rightEye, mouth, nose
+    vector<ofVec2f> avgLandmarksPos;    
 
     //--------------------------------------------------------------
     // return a point position (in percent) within a rectangle
-    ofVec2f getPct(ofPolyline polyline, ofRectangle &boundingRect) {
+    ofVec2f getPct(ofPolyline polyline, const ofRectangle &boundingRect) {
         // Check if the polyline is not empty
         if (polyline.size()!=0) {
             // Get polyline center

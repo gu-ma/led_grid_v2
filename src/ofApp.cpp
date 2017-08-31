@@ -22,11 +22,9 @@ void ofApp::update(){
     // update
     newFrame = false;
     #ifdef _USE_LIVE_VIDEO
-        grabber.update();
-        newFrame = grabber.isFrameNew();
+        grabber.update(); newFrame = grabber.isFrameNew();
     #else
-        video.update();
-        newFrame = video.isFrameNew();
+        video.update(); newFrame = video.isFrameNew();
     #endif
     
     if(newFrame){
@@ -67,7 +65,6 @@ void ofApp::update(){
         if (!isIdle) {
             //
             agedImages.clear();
-            //
             lockedFaceFound = false;
             for(auto instance : tracker.getInstances()) {
                 
