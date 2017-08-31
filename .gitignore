@@ -1,3 +1,38 @@
+# https://stackoverflow.com/questions/49478/git-ignore-file-for-xcode-projects#12021580
+
+# ———————   
+# OS X temporary files that should never be committed
+.DS_Store
+.Trashes
+*.swp
+*.lock
+
+# ——————— 
+# Xcode temporary files that should never be committed
+*~.nib
+
+# ——————— 
+# Xcode build files -
+DerivedData/
+build/
+
+# ——————— 
+# Xcode private settings (window sizes, bookmarks, breakpoints, custom executables, smart groups)
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+# whitelist the default ones, some projects need to use these
+!default.pbxuser
+!default.mode1v3
+!default.mode2v3
+!default.perspectivev3
+
+# ——————— 
+# Xcode 4 - semi-personal settings
+*.xccheckout
+xcuserdata/
+
 # Compiled Object files
 *.slo
 *.lo
@@ -35,9 +70,5 @@
 *.m4v
 
 #folders
-/bin/data/output/
-/bin/data/vids/
-
-#other
-**/led_grid_v2.xcodeproj/project.xcworkspace/xcuserdata/
-**/led_grid_v2.xcodeproj/project.xcworkspace/xcshareddata/
+bin/data/output/*
+bin/data/vids/*
