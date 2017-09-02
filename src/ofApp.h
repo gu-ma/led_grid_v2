@@ -26,7 +26,8 @@ public:
     
     // General
     void initVar();
-    bool isIdle, facesFound, faceLocked, lockedFaceFound, showGrid, showText, newFrame;
+    bool isIdle, facesFound, faceLocked, lockedFaceFound, showGrid, showText, newFrame, fullScreen;
+    int outputPositionX, outputPositionY, outputShapeW, outputShapeH;
     
     // Capture
     ofVideoGrabber grabber;
@@ -84,7 +85,7 @@ public:
     int gridWidth, gridHeight, gridRes, gridMinSize, gridMaxSize;
     float initTimeGrid;
     Grid grid;
-    void pushToGrid();
+    void randomizeGrid();
 
     
 };

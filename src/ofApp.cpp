@@ -5,7 +5,8 @@
 void ofApp::setup(){
     ofSetBackgroundColor(0);
     #ifdef _USE_LIVE_VIDEO
-        grabber.setup(1920, 1080);
+//        grabber.setup(1920, 1080);
+        grabber.setup(1024, 768);
     #else
         video.load("vids/motinas_multi_face_fast.mp4");
         video.play();
@@ -97,11 +98,11 @@ void ofApp::update(){
 //                    pushToGrid();
                     if (showGrid) {
                         for (int i=0; i<5; i++) {
-                            ofImage img0 = faceUtils.getLandmarkImg(srcImg, instance, 0, faceImgSize, 80);
-                            ofImage img1 = faceUtils.getLandmarkImg(srcImg, instance, 1, faceImgSize, 30);
-                            ofImage img2 = faceUtils.getLandmarkImg(srcImg, instance, 2, faceImgSize, 30);
-                            ofImage img3 = faceUtils.getLandmarkImg(srcImg, instance, 3, faceImgSize, 40);
-                            ofImage img4 = faceUtils.getLandmarkImg(srcImg, instance, 4, faceImgSize, 40);
+                            ofImage img0 = faceUtils.getLandmarkImg(srcImg, instance, 0, faceImgSize/4, 80);
+                            ofImage img1 = faceUtils.getLandmarkImg(srcImg, instance, 1, faceImgSize/4, 30);
+                            ofImage img2 = faceUtils.getLandmarkImg(srcImg, instance, 2, faceImgSize/4, 30);
+                            ofImage img3 = faceUtils.getLandmarkImg(srcImg, instance, 3, faceImgSize/4, 40);
+                            ofImage img4 = faceUtils.getLandmarkImg(srcImg, instance, 4, faceImgSize/4, 40);
                             if (img0.isAllocated()) pis.push_back(Grid::PixelsItem(img0.getPixels(), Grid::face));
                             if (img1.isAllocated()) pis.push_back(Grid::PixelsItem(img1.getPixels(), Grid::leftEye));
                             if (img2.isAllocated()) pis.push_back(Grid::PixelsItem(img2.getPixels(), Grid::rightEye));
@@ -184,7 +185,7 @@ void ofApp::draw(){
         }
         
         // Draw grid
-        if (showGrid) grid.draw();
+        if (showGrid) grid.draw(outputPositionX, outputPositionY);
 
 
     }
@@ -224,6 +225,13 @@ void ofApp::exit(){
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
     if (key == ' ') faceLocked = false;
+    
+    if(key == 'f'){
+        fullScreen = !fullScreen;
+        if(fullScreen) ofSetFullscreen(true);
+        else ofSetFullscreen(false);
+    }
+    
 }
 
 // VAR
@@ -248,7 +256,7 @@ void ofApp::initVar(){
     secondToAgeCoef = 80, ageToLock = timeToLock / secondToAgeCoef;
     trackerIsThreaded = true;
     //
-    faceImgSize = 128, desiredLeftEyeX = 0.39, desiredLeftEyeY = 0.43, faceScaleRatio = 2.6;
+    faceImgSize = 256, desiredLeftEyeX = 0.39, desiredLeftEyeY = 0.43, faceScaleRatio = 2.6;
     faceRotate = true, faceConstrain = true;
 
     // filter
@@ -268,47 +276,92 @@ void ofApp::initVar(){
 // GUI
 //--------------------------------------------------------------
 void ofApp::drawGui(){
-    // GUI
     gui.begin();
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-    ImGui::SliderFloat("Scale Source", &srcImgScale, .1, 3);
-    if (ImGui::CollapsingHeader("filter", false)) {
+    if (ImGui::CollapsingHeader("Misc", false)) {
+        ImGui::SliderFloat("Scale Source", &srcImgScale, .1, 3);
         ImGui::SliderInt("filterClaheClipLimit", &filterClaheClipLimit, 0, 6);
+        ImGui::Checkbox("Filtered", &srcImgIsFiltered); ImGui::SameLine();
+        ImGui::Checkbox("Colored", &srcImgIsColored); ImGui::SameLine();
         ImGui::Checkbox("Cropped", &srcImgIsCropped);
-        ImGui::Checkbox("Filter", &srcImgIsFiltered);
-        ImGui::Checkbox("Colored", &srcImgIsColored);
     }
-    if (ImGui::CollapsingHeader("tracker", false)) {
+    if (ImGui::CollapsingHeader("Tracker", false)) {
+        ImGui::Columns(2);
+        //
+        ImGui::Text("Detector Size");
         int maxSize = int(srcImg.getWidth()*srcImg.getHeight())*20;
-        if (ImGui::SliderInt("Face Detector Size", &trackerFaceDetectorImageSize, 100000, maxSize)) tracker.setFaceDetectorImageSize(trackerFaceDetectorImageSize);
-        if (ImGui::SliderInt("Landmark Detector Size", &trackerLandmarkDetectorImageSize, 100000, maxSize*2)) tracker.setLandmarkDetectorImageSize(trackerLandmarkDetectorImageSize);
+        if (ImGui::SliderInt("Face", &trackerFaceDetectorImageSize, 100000, maxSize, "%.0f px")) tracker.setFaceDetectorImageSize(trackerFaceDetectorImageSize);
+        if (ImGui::SliderInt("Landmark", &trackerLandmarkDetectorImageSize, 100000, maxSize*2, "%.0f px")) tracker.setLandmarkDetectorImageSize(trackerLandmarkDetectorImageSize);
         if (ImGui::Checkbox("Threaded", &trackerIsThreaded)) tracker.setThreaded(trackerIsThreaded);
-        ImGui::Text("Face");
-        ImGui::SliderInt("Img Size", &faceImgSize, 0, 500);
-        ImGui::SliderFloat("desiredLeftEyeX", &desiredLeftEyeX, 0, .5);
-        ImGui::SliderFloat("desiredLeftEyeY", &desiredLeftEyeY, 0, .5);
-        ImGui::SliderFloat("scale amount", &faceScaleRatio, 1, 5);
+        ImGui::NextColumn();
+        //
+        ImGui::Text("Face Aligning");
+        ImGui::SliderInt("Img Size", &faceImgSize, 64, 512, "%.0f px");
+        ImGui::SliderFloat("desiredLeftEyeX", &desiredLeftEyeX, 0, .5, "%.02f %%");
+        ImGui::SliderFloat("desiredLeftEyeY", &desiredLeftEyeY, 0, .5, "%.02f %%");
+        ImGui::SliderFloat("scale amount", &faceScaleRatio, 1, 5, "%.0f");
         ImGui::Checkbox("Rotate", &faceRotate);
         ImGui::Checkbox("Constrain only", &faceConstrain);
+        //
+        ImGui::Columns(1);
+        ImGui::Separator();
     }
-    if (ImGui::CollapsingHeader("timers", false)) {
-        if (ImGui::SliderInt("Time to sleep", &timeToSleep, 1000, 20000)) timerSleep.setTimer(timeToSleep);
-        if (ImGui::SliderInt("Time to wake", &timeToWake, 1000, 20000)) timerWake.setTimer(timeToWake);
-        ImGui::Text("------");
-        if (ImGui::SliderInt("Time to lock", &timeToLock, 1000, 20000)) ageToLock = timeToLock / secondToAgeCoef;
-        ImGui::SliderInt("Sec to age coef", &secondToAgeCoef, 50, 150);
-        ImGui::Text("------");
-        if (ImGui::SliderInt("Time to grid", &timeToShowGrid, 1000, 20000)) timerShowGrid.setTimer(timeToShowGrid);
-        if (ImGui::SliderInt("Time to text", &timeToShowText, 1000, 20000)) timerShowText.setTimer(timeToShowText);
+    if (ImGui::CollapsingHeader("Timers", false)) {
+        ImGui::Columns(3);
+        //
+        ImGui::Text("Idle");
+        if (ImGui::SliderInt("Sleep", &timeToSleep, 1000, 20000, "%.0f ms")) timerSleep.setTimer(timeToSleep);
+        if (ImGui::SliderInt("Wake", &timeToWake, 1000, 20000, "%.0f ms")) timerWake.setTimer(timeToWake);
+        ImGui::NextColumn();
+        //
+        ImGui::Text("Lock");
+        if (ImGui::SliderInt("Lock", &timeToLock, 1000, 20000, "%.0f ms")) ageToLock = timeToLock / secondToAgeCoef;
+        ImGui::SliderInt("Coef", &secondToAgeCoef, 50, 150, "%.0f pct");
+        ImGui::NextColumn();
+        //
+        ImGui::Text("Other");
+        if (ImGui::SliderInt("Grid", &timeToShowGrid, 1000, 20000, "%.0f ms")) timerShowGrid.setTimer(timeToShowGrid);
+        if (ImGui::SliderInt("Text", &timeToShowText, 1000, 20000, "%.0f ms")) timerShowText.setTimer(timeToShowText);
+        //
+        ImGui::Columns(1);
+        ImGui::Separator();
     }
-    if (ImGui::CollapsingHeader("Grid", false)) {
-        ImGui::SliderInt("gridWidth", &gridWidth, 1, 24);
-        ImGui::SliderInt("gridHeight", &gridHeight, 1, 24);
-        ImGui::InputInt("gridRes", &gridRes, 8);
-        ImGui::SliderInt("gridMaxSize", &gridMaxSize, 1, 12);
-        ImGui::Checkbox("gridIsSquare", &gridIsSquare);
-        ImGui::Checkbox("showGrid", &showGrid);
-        if(ImGui::Button("Refresh Grid")) grid.init(gridWidth, gridHeight, gridRes, gridMinSize, gridMaxSize, gridIsSquare);
+    if (ImGui::CollapsingHeader("Grid ", false)) {
+        ImGui::Columns(3);
+        //
+        ImGui::Text("Shape");
+        ImGui::SliderInt("Width", &gridWidth, 1, 24);
+        ImGui::SliderInt("Height", &gridHeight, 1, 24);
+        ImGui::NextColumn();
+        //
+        ImGui::Text("Size");
+        ImGui::InputInt("Res", &gridRes, 8);
+        ImGui::SliderInt("maxSize", &gridMaxSize, 1, 12);
+        ImGui::NextColumn();
+        //
+        ImGui::Text("Options");
+        ImGui::Checkbox("grid Is Square", &gridIsSquare);
+        ImGui::Checkbox("show Grid", &showGrid);
+        ImGui::NextColumn();
+        //
+        ImGui::Columns(1);
+        ImGui::Separator();
+        if (ImGui::Button("Refresh")) grid.init(gridWidth, gridHeight, gridRes, gridMinSize, gridMaxSize, gridIsSquare); ImGui::SameLine();
+        if (ImGui::Button("Randomize")) randomizeGrid();
+        ImGui::Separator();
+    }
+    if (ImGui::CollapsingHeader("Output", false)) {
+        ImGui::Columns(2);
+        //
+        ImGui::Text("Position");
+        ImGui::DragInt("X", &outputPositionX, 1, 0, ofGetWindowWidth());
+        ImGui::DragInt("Y", &outputPositionY, 1, 0, ofGetWindowHeight());
+        ImGui::NextColumn();
+        //
+        ImGui::Text("Shape");
+        ImGui::DragInt("W", &outputShapeW, 1, 1, ofGetWindowWidth()-outputPositionX);
+        ImGui::DragInt("H", &outputShapeH, 1, 1, ofGetWindowHeight()-outputPositionY);
+        ImGui::NextColumn();
     }
     gui.end();
 }
@@ -387,6 +440,9 @@ void ofApp::timerShowTextFinished(ofEventArgs &e) {
 
 // GRID
 //--------------------------------------------------------------
-void ofApp::pushToGrid() {
-    
+void ofApp::randomizeGrid(){
+    // grid
+    if (ofRandom(1)>.4) gridWidth = 6, gridHeight = 6, gridRes = 32, gridMaxSize = ofRandom(6);
+    else gridWidth = 12, gridHeight = 12, gridRes = 16, gridMaxSize = ofRandom(12);
+    gridIsSquare = (ofRandom(1)>.5) ? true : false;
 }

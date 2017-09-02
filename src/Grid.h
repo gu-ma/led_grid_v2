@@ -92,26 +92,29 @@ public:
     }
     
     //
-    void draw() {
-        int i = 0;
-        int j = 0;
-        for (auto & ge : GridElements) {
-            //
-            int x = ge.rectangle.x*this->resolution;
-            int y = ge.rectangle.y*this->resolution;
-            int w = ge.rectangle.getWidth()*this->resolution;
-            int h = ge.rectangle.getHeight()*this->resolution;
-            //
-            if (ge.contentType == pixels && !this->pixelsItems.empty()) {
-//                ofSetColor( ofMap(ofNoise(x, y),0, 1, 0, 255), ofMap(ofNoise(y, x),0, 1, 255, 0), ofMap(ofNoise(ge.alpha),0, 1, 255, 0), ge.alpha);
-//                ofSetColor( ofMap(x, 0, this->width*this->resolution, 0, 255), ofMap(y, 0, this->height*this->resolution, 0, 255), 255, ge.alpha);
-                ofSetColor(255, ge.alpha);
-                PixelsItem pc = this->pixelsItems.at((j)%this->pixelsItems.size());
-                pc.cropAndDraw(x, y, w, h);
-                j ++;
-                ofSetColor(255);
+    void draw(int x, int y) {
+        ofPushMatrix();
+            ofTranslate(x, y);
+            int i = 0;
+            int j = 0;
+            for (auto & ge : GridElements) {
+                //
+                int x = ge.rectangle.x*this->resolution;
+                int y = ge.rectangle.y*this->resolution;
+                int w = ge.rectangle.getWidth()*this->resolution;
+                int h = ge.rectangle.getHeight()*this->resolution;
+                //
+                if (ge.contentType == pixels && !this->pixelsItems.empty()) {
+    //                ofSetColor( ofMap(ofNoise(x, y),0, 1, 0, 255), ofMap(ofNoise(y, x),0, 1, 255, 0), ofMap(ofNoise(ge.alpha),0, 1, 255, 0), ge.alpha);
+    //                ofSetColor( ofMap(x, 0, this->width*this->resolution, 0, 255), ofMap(y, 0, this->height*this->resolution, 0, 255), 255, ge.alpha);
+                    ofSetColor(255, ge.alpha);
+                    PixelsItem pc = this->pixelsItems.at((j)%this->pixelsItems.size());
+                    pc.cropAndDraw(x, y, w, h);
+                    j ++;
+                    ofSetColor(255);
+                }
             }
-        }
+        ofPopMatrix();
         
     }
     
