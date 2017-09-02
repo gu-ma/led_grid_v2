@@ -1,5 +1,5 @@
 //
-//  faceUtils.h
+//  FaceUtils.h
 //  Facetracker_face_alignment
 //
 //  Created by Guillaume on 21.08.17.
@@ -12,18 +12,18 @@
 // . Create a proper class including the srcImg and FacetrackerInstance
 // . Add an alias system for landmarks (faceOutline, leftEye, rightEye, mouth, nose)
 
-#ifndef faceUtils_h
-#define faceUtils_h
+#ifndef FaceUtils_h
+#define FaceUtils_h
 
-class faceUtils {
+class FaceUtils {
     
 public:
     
-    faceUtils(){
+    FaceUtils(){
         landmarksPosHistory.assign(5,deque<ofVec2f>());
         avgLandmarksPos.assign(5,ofVec2f(0,0));
     };
-    ~faceUtils(){};
+    ~FaceUtils(){};
     
     //--------------------------------------------------------------
     void updateLandmarksAverage(ofxFaceTracker2Instance &instance){
@@ -188,4 +188,4 @@ private:
     
 };
 
-#endif /* faceUtils_h */
+#endif /* FaceUtils_h */

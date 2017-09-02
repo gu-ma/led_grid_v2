@@ -9,9 +9,11 @@
 #include "ofxTimer.h"
 // local files
 #include "Clahe.h"
-#include "faceUtils.h"
+#include "FaceUtils.h"
+#include "Grid.h"
+#include "LogAudio.h"
 
-//#define _USE_LIVE_VIDEO
+#define _USE_LIVE_VIDEO
 
 class ofApp : public ofBaseApp{
     
@@ -49,7 +51,7 @@ public:
     bool trackerIsThreaded;
     void initTracker();
     // Face alignment
-    faceUtils faceUtils;
+    FaceUtils faceUtils;
     int faceImgSize;
     float desiredLeftEyeX, desiredLeftEyeY, faceScaleRatio;
     bool faceRotate, faceConstrain;
@@ -76,6 +78,14 @@ public:
     string faceVideoPath;
     void initVidRecorder();
     void vidRecordingComplete(ofxVideoRecorderOutputFileCompleteEventArgs &args);
+    
+    // grid
+    bool showGridElements, gridIsSquare;
+    int gridWidth, gridHeight, gridRes, gridMinSize, gridMaxSize;
+    float initTimeGrid;
+    Grid grid;
+    void pushToGrid();
+
     
 };
 

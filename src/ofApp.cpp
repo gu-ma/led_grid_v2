@@ -1,10 +1,11 @@
 #include "ofApp.h"
 
+// CORE
 //--------------------------------------------------------------
 void ofApp::setup(){
     ofSetBackgroundColor(0);
     #ifdef _USE_LIVE_VIDEO
-        grabber.setup(1280, 720);
+        grabber.setup(1920, 1080);
     #else
         video.load("vids/motinas_multi_face_fast.mp4");
         video.play();
@@ -63,9 +64,12 @@ void ofApp::update(){
         
         // If it's not in Idle mode
         if (!isIdle) {
-            //
+            
+            // Init misc var
             agedImages.clear();
             lockedFaceFound = false;
+            vector<Grid::PixelsItem> pis;
+            
             for(auto instance : tracker.getInstances()) {
                 
                 if ( instance.getAge() > ageToLock && !faceLocked ) {
@@ -87,13 +91,33 @@ void ofApp::update(){
                 if ( img.isAllocated() && instance.getLabel()==faceLockedLabel) {
                     // add image to vid recorder
                     if (vidRecorder.isInitialized()) vidRecorder.addFrame(img.getPixels());
+                    // update averages values
+                    faceUtils.updateLandmarksAverage(instance);
+                    // Push elements to the grid
+//                    pushToGrid();
+                    if (showGrid) {
+                        for (int i=0; i<5; i++) {
+                            ofImage img0 = faceUtils.getLandmarkImg(srcImg, instance, 0, faceImgSize, 80);
+                            ofImage img1 = faceUtils.getLandmarkImg(srcImg, instance, 1, faceImgSize, 30);
+                            ofImage img2 = faceUtils.getLandmarkImg(srcImg, instance, 2, faceImgSize, 30);
+                            ofImage img3 = faceUtils.getLandmarkImg(srcImg, instance, 3, faceImgSize, 40);
+                            ofImage img4 = faceUtils.getLandmarkImg(srcImg, instance, 4, faceImgSize, 40);
+                            if (img0.isAllocated()) pis.push_back(Grid::PixelsItem(img0.getPixels(), Grid::face));
+                            if (img1.isAllocated()) pis.push_back(Grid::PixelsItem(img1.getPixels(), Grid::leftEye));
+                            if (img2.isAllocated()) pis.push_back(Grid::PixelsItem(img2.getPixels(), Grid::rightEye));
+                            if (img3.isAllocated()) pis.push_back(Grid::PixelsItem(img3.getPixels(), Grid::nose));
+                            if (img4.isAllocated()) pis.push_back(Grid::PixelsItem(img4.getPixels(), Grid::mouth));
+                        }
+                    }
                     //
                     lockedFaceFound = true;
                 }
+                
             }
             
-            // If the locked face is not visible
+            // If the locked face is not found
             if (!lockedFaceFound) {
+                // Stop gridTimer
                 timerShowGrid.reset(), timerShowGrid.stopTimer();
                 showGrid = false;
             } else if (!showGrid) {
@@ -107,6 +131,23 @@ void ofApp::update(){
                 vidRecorder.close();
             }
             
+            // Grid
+            if (showGrid) {
+                // update
+                grid.updatePixels(pis);
+                // easing of alpha
+                int s = grid.GridElements.size();
+                if (s) {
+                    for (int i=0; i<s; i++) {
+                        float t = 4.f;
+                        float d = 1.5;
+                        auto startTime = initTimeGrid+(float)i/s*t;
+                        auto endTime = initTimeGrid+(float)i/s*t + d;
+                        auto now = ofGetElapsedTimef();
+//                        grid.GridElements.at(i).setAlpha( ofxeasing::map_clamp(now, startTime, endTime, 0, 255, &ofxeasing::linear::easeOut) );
+                    }
+                }
+            }
             
             // sort aged Images vector
             std::sort(agedImages.begin(), agedImages.end(), byFirst());
@@ -142,22 +183,9 @@ void ofApp::draw(){
             x += faceImgSize;
         }
         
-        //
-        for(auto instance : tracker.getInstances()) {
-            if ( instance.getLabel() == faceLockedLabel ) {
-                faceUtils.updateLandmarksAverage(instance);
-                ofImage img0 = faceUtils.getLandmarkImg(srcImg, instance, 0, faceImgSize, 80);
-                ofImage img1 = faceUtils.getLandmarkImg(srcImg, instance, 1, faceImgSize, 30);
-                ofImage img2 = faceUtils.getLandmarkImg(srcImg, instance, 2, faceImgSize, 30);
-                ofImage img3 = faceUtils.getLandmarkImg(srcImg, instance, 3, faceImgSize, 40);
-                ofImage img4 = faceUtils.getLandmarkImg(srcImg, instance, 4, faceImgSize, 40);
-                if (img0.isAllocated()) img0.draw(0, 400 + faceImgSize);
-                if (img1.isAllocated()) img1.draw(faceImgSize, 400 + faceImgSize);
-                if (img2.isAllocated()) img2.draw(faceImgSize*2, 400 + faceImgSize);
-                if (img3.isAllocated()) img3.draw(faceImgSize*3, 400 + faceImgSize);
-                if (img4.isAllocated()) img4.draw(faceImgSize*4, 400 + faceImgSize);
-            }
-        }
+        // Draw grid
+        if (showGrid) grid.draw();
+
 
     }
     
@@ -218,11 +246,10 @@ void ofApp::initVar(){
     // tracker
     trackerFaceDetectorImageSize = 2000000, trackerLandmarkDetectorImageSize = 2000000;
     secondToAgeCoef = 80, ageToLock = timeToLock / secondToAgeCoef;
-    trackerIsThreaded = false;
+    trackerIsThreaded = true;
     //
     faceImgSize = 128, desiredLeftEyeX = 0.39, desiredLeftEyeY = 0.43, faceScaleRatio = 2.6;
     faceRotate = true, faceConstrain = true;
-
 
     // filter
     filterClaheClipLimit = 2;
@@ -230,6 +257,11 @@ void ofApp::initVar(){
     
     // video recording
     faceVideoPath = "output";
+
+    // grid
+    showGrid = false, showGridElements = false, gridIsSquare = true;
+    gridWidth = 24, gridHeight = 24, gridRes = 16, gridMinSize = 0, gridMaxSize = 12;
+    
     
 }
 
@@ -268,6 +300,15 @@ void ofApp::drawGui(){
         ImGui::Text("------");
         if (ImGui::SliderInt("Time to grid", &timeToShowGrid, 1000, 20000)) timerShowGrid.setTimer(timeToShowGrid);
         if (ImGui::SliderInt("Time to text", &timeToShowText, 1000, 20000)) timerShowText.setTimer(timeToShowText);
+    }
+    if (ImGui::CollapsingHeader("Grid", false)) {
+        ImGui::SliderInt("gridWidth", &gridWidth, 1, 24);
+        ImGui::SliderInt("gridHeight", &gridHeight, 1, 24);
+        ImGui::InputInt("gridRes", &gridRes, 8);
+        ImGui::SliderInt("gridMaxSize", &gridMaxSize, 1, 12);
+        ImGui::Checkbox("gridIsSquare", &gridIsSquare);
+        ImGui::Checkbox("showGrid", &showGrid);
+        if(ImGui::Button("Refresh Grid")) grid.init(gridWidth, gridHeight, gridRes, gridMinSize, gridMaxSize, gridIsSquare);
     }
     gui.end();
 }
@@ -308,8 +349,8 @@ void ofApp::initTimers() {
 }
 
 void ofApp::timerSleepFinished(ofEventArgs &e) {
-    //
-//    timerSleep.stopTimer();
+    // Stop
+    timerSleep.stopTimer();
     // Add the wake time to the age to lock
     ageToLock = timeToLock/secondToAgeCoef + timeToWake/secondToAgeCoef;
     // Start Videos
@@ -318,8 +359,8 @@ void ofApp::timerSleepFinished(ofEventArgs &e) {
 }
 
 void ofApp::timerWakeFinished(ofEventArgs &e) {
-    //
-//    timerWake.stopTimer();
+    // Stop
+    timerWake.stopTimer();
     // set age to Lock to default
     ageToLock = timeToLock/secondToAgeCoef;
     // Stop Videos
@@ -328,13 +369,24 @@ void ofApp::timerWakeFinished(ofEventArgs &e) {
 }
 
 void ofApp::timerShowGridFinished(ofEventArgs &e) {
-    //
-//    timerShowGrid.stopTimer();
-    showGrid = true;
+    // Stop
+    timerShowGrid.stopTimer();
     timerShowText.reset(), timerShowText.startTimer();
+    // Init and show grid
+    grid.init(gridWidth, gridHeight, gridRes, gridMinSize, gridMaxSize, gridIsSquare);
+    // Save the time
+    initTimeGrid = ofGetElapsedTimef();
+    showGrid = true;
 }
 
 void ofApp::timerShowTextFinished(ofEventArgs &e) {
     //
     timerShowText.stopTimer();
+}
+
+
+// GRID
+//--------------------------------------------------------------
+void ofApp::pushToGrid() {
+    
 }
