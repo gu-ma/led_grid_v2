@@ -7,6 +7,7 @@
 #include "ofxCv.h"
 #include "ofxOpenCv.h"
 #include "ofxTimer.h"
+#include "ofxEasing.h"
 // local files
 #include "Clahe.h"
 #include "FaceUtils.h"
@@ -27,7 +28,8 @@ public:
     // General
     void initVar();
     bool isIdle, facesFound, faceLocked, lockedFaceFound, showGrid, showText, newFrame, fullScreen;
-    int outputPositionX, outputPositionY, outputShapeW, outputShapeH;
+    int outputPositionX, outputPositionY, outputSizeW, outputSizeH;
+    float sceneScale;
     
     // Capture
     ofVideoGrabber grabber;

@@ -135,7 +135,6 @@ public:
         int i = 0;
         int x,y,w,h,rw,rh;
         
-        // create pixel grid
         // sometime makes it following the grid exactly
         if (ofRandom(1)<.6 && this->width==6 && this->height==6 && this->resolution==32) {
             createGridTemplate(squareOnly); // 6*6 only

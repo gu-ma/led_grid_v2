@@ -3,13 +3,13 @@
 // CORE
 //--------------------------------------------------------------
 void ofApp::setup(){
+    ofSetFullscreen(true);
     ofSetBackgroundColor(0);
     #ifdef _USE_LIVE_VIDEO
 //        grabber.setup(1920, 1080);
         grabber.setup(1024, 768);
     #else
-        video.load("vids/motinas_multi_face_fast.mp4");
-        video.play();
+        video.load("vids/motinas_multi_face_fast.mp4"); video.play();
     #endif
     initVar();
     initTracker();
@@ -66,7 +66,7 @@ void ofApp::update(){
         // If it's not in Idle mode
         if (!isIdle) {
             
-            // Init misc var
+            // misc var
             agedImages.clear();
             lockedFaceFound = false;
             vector<Grid::PixelsItem> pis;
@@ -124,6 +124,8 @@ void ofApp::update(){
             } else if (!showGrid) {
                 // Start gridTimer
                 timerShowGrid.startTimer();
+                // set age to Lock to default
+                ageToLock = timeToLock/secondToAgeCoef;
             }
             
             // If the face locked does not exist anymore
@@ -140,12 +142,12 @@ void ofApp::update(){
                 int s = grid.GridElements.size();
                 if (s) {
                     for (int i=0; i<s; i++) {
-                        float t = 4.f;
-                        float d = 1.5;
+                        float t = 2.f;
+                        float d = .5;
                         auto startTime = initTimeGrid+(float)i/s*t;
                         auto endTime = initTimeGrid+(float)i/s*t + d;
                         auto now = ofGetElapsedTimef();
-//                        grid.GridElements.at(i).setAlpha( ofxeasing::map_clamp(now, startTime, endTime, 0, 255, &ofxeasing::linear::easeOut) );
+                        grid.GridElements.at(i).setAlpha( ofxeasing::map_clamp(now, startTime, endTime, 0, 255, &ofxeasing::linear::easeOut) );
                     }
                 }
             }
@@ -159,33 +161,49 @@ void ofApp::update(){
 //--------------------------------------------------------------
 void ofApp::draw(){
     
+    //
+    ofImage alignedFace;
+    
     // Draw source image + tracker
     ofPushMatrix();
-        ofScale(1/srcImgScale, 1/srcImgScale);
+        ofScale(1/srcImgScale*sceneScale, 1/srcImgScale*sceneScale);
         srcImg.draw(0, 0);
         // Draw tracker landmarks
         tracker.drawDebug();
-    ofPopMatrix();
-    
-    if (!isIdle) {
-        
         // Draw faces
         int x = 0;
         for(auto agedImage : agedImages) {
             ofImage img = agedImage.second;
-            if (img.isAllocated()) img.draw(x, 400);
+            if (img.isAllocated()) img.draw(x, srcImg.getHeight());
             if (agedImage.first == faceLockedLabel) {
                 ofPushStyle();
                     ofNoFill();
                     ofSetColor(255,0,0);
-                    ofDrawRectangle(x, 400, faceImgSize, faceImgSize);
+                    ofDrawRectangle(x, srcImg.getHeight(), faceImgSize, faceImgSize);
                 ofPopStyle();
+                alignedFace = img;
             }
             x += faceImgSize;
         }
-        
-        // Draw grid
-        if (showGrid) grid.draw(outputPositionX, outputPositionY);
+    ofPopMatrix();
+    
+    // Draw Output
+    if (!isIdle) {
+        ofPushMatrix();
+            ofTranslate(outputPositionX, outputPositionY);
+            // no face locked
+            if (! lockedFaceFound) {
+                srcImg.draw(0, 0, outputSizeW, outputSizeW);
+                ofPushMatrix();
+                    ofScale(outputSizeW/srcImg.getWidth(), outputSizeW/srcImg.getWidth());
+                    tracker.drawDebug();
+                ofPopMatrix();
+            } else {
+                alignedFace.draw(0, 0, outputSizeW, outputSizeW);
+            }
+            // Grid
+            if (showGrid) grid.draw(0,0);
+        ofPopMatrix();
 
 
     }
@@ -239,6 +257,9 @@ void ofApp::keyPressed(int key){
 void ofApp::initVar(){
     // general
     isIdle = false, facesFound = false, lockedFaceFound = false,  faceLocked = false, showGrid = false, showText = false;
+    outputPositionX = 600, outputPositionY = 600, outputSizeW = 192, outputSizeH = 192;
+    
+    sceneScale = 1;
     
     // capture
     srcImgScale = 1;
@@ -247,7 +268,7 @@ void ofApp::initVar(){
     timeToSleep = 5000; // time before entering idle mode
     timeToWake = 2000; // time before exiting idle mode
     timeToLock = 2000, // Time before locking up a face
-    timeToShowGrid = 1000; // time before grid
+    timeToShowGrid = 2000; // time before grid
     timeToShowText = 20000; // time before showing the text
     timeToShowNextText = 5000; // time before showing the next bunch of text
 
@@ -268,7 +289,8 @@ void ofApp::initVar(){
 
     // grid
     showGrid = false, showGridElements = false, gridIsSquare = true;
-    gridWidth = 24, gridHeight = 24, gridRes = 16, gridMinSize = 0, gridMaxSize = 12;
+//    gridWidth = 24, gridHeight = 24, gridRes = 16, gridMinSize = 0, gridMaxSize = 12;
+    gridWidth = 12, gridHeight = 12, gridRes = 16, gridMinSize = 0, gridMaxSize = 12;
     
     
 }
@@ -278,8 +300,9 @@ void ofApp::initVar(){
 void ofApp::drawGui(){
     gui.begin();
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-    if (ImGui::CollapsingHeader("Misc", false)) {
+    if (ImGui::CollapsingHeader("General", false)) {
         ImGui::SliderFloat("Scale Source", &srcImgScale, .1, 3);
+        ImGui::SliderFloat("Scale Scene", &sceneScale, .1, 2);
         ImGui::SliderInt("filterClaheClipLimit", &filterClaheClipLimit, 0, 6);
         ImGui::Checkbox("Filtered", &srcImgIsFiltered); ImGui::SameLine();
         ImGui::Checkbox("Colored", &srcImgIsColored); ImGui::SameLine();
@@ -354,13 +377,13 @@ void ofApp::drawGui(){
         ImGui::Columns(2);
         //
         ImGui::Text("Position");
-        ImGui::DragInt("X", &outputPositionX, 1, 0, ofGetWindowWidth());
-        ImGui::DragInt("Y", &outputPositionY, 1, 0, ofGetWindowHeight());
+        ImGui::DragInt("X", &outputPositionX, 1, 0, ofGetWindowWidth(), "%.0f ms");
+        ImGui::DragInt("Y", &outputPositionY, 1, 0, ofGetWindowHeight(), "%.0f ms");
         ImGui::NextColumn();
         //
-        ImGui::Text("Shape");
-        ImGui::DragInt("W", &outputShapeW, 1, 1, ofGetWindowWidth()-outputPositionX);
-        ImGui::DragInt("H", &outputShapeH, 1, 1, ofGetWindowHeight()-outputPositionY);
+        ImGui::Text("Size");
+        ImGui::DragInt("W", &outputSizeW, 1, 1, ofGetWindowWidth()-outputPositionX, "%.0f px");
+        ImGui::DragInt("H", &outputSizeH, 1, 1, ofGetWindowHeight()-outputPositionY, "%.0f px");
         ImGui::NextColumn();
     }
     gui.end();
@@ -414,8 +437,6 @@ void ofApp::timerSleepFinished(ofEventArgs &e) {
 void ofApp::timerWakeFinished(ofEventArgs &e) {
     // Stop
     timerWake.stopTimer();
-    // set age to Lock to default
-    ageToLock = timeToLock/secondToAgeCoef;
     // Stop Videos
     // Adjust volumes
     isIdle = false;

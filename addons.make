@@ -1,4 +1,5 @@
 ofxCv
+ofxEasing
 ofxFaceTracker2
 ofxImGui
 ofxOpenCv
