@@ -142,11 +142,8 @@ void ofApp::update(){
                 int s = grid.GridElements.size();
                 if (s) {
                     for (int i=0; i<s; i++) {
-                        float t = 2.f;
-                        float d = .5;
-                        auto startTime = initTimeGrid+(float)i/s*t;
-                        auto endTime = initTimeGrid+(float)i/s*t + d;
-                        auto now = ofGetElapsedTimef();
+                        float t = 2.f, d = .5;
+                        auto startTime = initTimeGrid+(float)i/s*t, endTime = initTimeGrid+(float)i/s*t + d, now = ofGetElapsedTimef();
                         grid.GridElements.at(i).setAlpha( ofxeasing::map_clamp(now, startTime, endTime, 0, 255, &ofxeasing::linear::easeOut) );
                     }
                 }
@@ -154,6 +151,9 @@ void ofApp::update(){
             
             // sort aged Images vector
             std::sort(agedImages.begin(), agedImages.end(), byFirst());
+            
+        } else {
+            updateVideos();
         }
     }
 }
@@ -173,40 +173,36 @@ void ofApp::draw(){
         // Draw faces
         int x = 0;
         for(auto agedImage : agedImages) {
-            ofImage img = agedImage.second;
-            if (img.isAllocated()) img.draw(x, srcImg.getHeight());
+            agedImage.second.draw(x, srcImg.getHeight());
             if (agedImage.first == faceLockedLabel) {
                 ofPushStyle();
                     ofNoFill();
                     ofSetColor(255,0,0);
                     ofDrawRectangle(x, srcImg.getHeight(), faceImgSize, faceImgSize);
                 ofPopStyle();
-                alignedFace = img;
+                alignedFace = agedImage.second;
             }
             x += faceImgSize;
         }
     ofPopMatrix();
     
     // Draw Output
-    if (!isIdle) {
-        ofPushMatrix();
-            ofTranslate(outputPositionX, outputPositionY);
-            // no face locked
-            if (! lockedFaceFound) {
-                srcImg.draw(0, 0, outputSizeW, outputSizeW);
-                ofPushMatrix();
-                    ofScale(outputSizeW/srcImg.getWidth(), outputSizeW/srcImg.getWidth());
-                    tracker.drawDebug();
-                ofPopMatrix();
-            } else {
-                alignedFace.draw(0, 0, outputSizeW, outputSizeW);
-            }
-            // Grid
-            if (showGrid) grid.draw(0,0);
-        ofPopMatrix();
-
-
-    }
+    ofPushStyle();
+        ofSetColor(255,0,0);
+        ofDrawRectangle(outputPositionX-2, outputPositionY-2, outputSizeW+4, outputSizeH+4);
+    ofPopStyle();
+    ofPushMatrix();
+        ofTranslate(outputPositionX, outputPositionY);
+        if (isIdle) drawVideos();
+        else if (!lockedFaceFound) {
+            srcImg.draw(0, 0, outputSizeW, outputSizeW);
+            ofPushMatrix();
+                ofScale(outputSizeW/srcImg.getWidth(), outputSizeW/srcImg.getWidth());
+                tracker.drawDebug();
+            ofPopMatrix();
+        } else alignedFace.draw(0, 0, outputSizeW, outputSizeW);
+        if (showGrid) grid.draw(0,0);
+    ofPopMatrix();
     
     // Draw text UI
     ofDrawBitmapStringHighlight("Framerate : " + ofToString(ofGetFrameRate()), 10, 20);
@@ -274,7 +270,7 @@ void ofApp::initVar(){
 
     // tracker
     trackerFaceDetectorImageSize = 2000000, trackerLandmarkDetectorImageSize = 2000000;
-    secondToAgeCoef = 80, ageToLock = timeToLock / secondToAgeCoef;
+    secondToAgeCoef = 50, ageToLock = timeToLock / secondToAgeCoef;
     trackerIsThreaded = true;
     //
     faceImgSize = 256, desiredLeftEyeX = 0.39, desiredLeftEyeY = 0.43, faceScaleRatio = 2.6;
@@ -284,8 +280,8 @@ void ofApp::initVar(){
     filterClaheClipLimit = 2;
     srcImgIsCropped = true, srcImgIsFiltered = true, srcImgIsColored = false;
     
-    // video recording
-    faceVideoPath = "output";
+    // video recording + playing
+    faceVideoPath = "output"; videosCount = 4;
 
     // grid
     showGrid = false, showGridElements = false, gridIsSquare = true;
@@ -339,7 +335,7 @@ void ofApp::drawGui(){
         //
         ImGui::Text("Lock");
         if (ImGui::SliderInt("Lock", &timeToLock, 1000, 20000, "%.0f ms")) ageToLock = timeToLock / secondToAgeCoef;
-        ImGui::SliderInt("Coef", &secondToAgeCoef, 50, 150, "%.0f pct");
+        if (ImGui::SliderInt("Coef", &secondToAgeCoef, 10, 120)) ageToLock = timeToLock / secondToAgeCoef;
         ImGui::NextColumn();
         //
         ImGui::Text("Other");
@@ -425,25 +421,27 @@ void ofApp::initTimers() {
 }
 
 void ofApp::timerSleepFinished(ofEventArgs &e) {
-    // Stop
+    // Stop Timer
     timerSleep.stopTimer();
     // Add the wake time to the age to lock
     ageToLock = timeToLock/secondToAgeCoef + timeToWake/secondToAgeCoef;
     // Start Videos
+    loadVideos();
     // Adjust volumes
     isIdle = true;
 }
 
 void ofApp::timerWakeFinished(ofEventArgs &e) {
-    // Stop
+    // Stop Timer
     timerWake.stopTimer();
     // Stop Videos
+    stopVideos();
     // Adjust volumes
     isIdle = false;
 }
 
 void ofApp::timerShowGridFinished(ofEventArgs &e) {
-    // Stop
+    // Stop Timer
     timerShowGrid.stopTimer();
     timerShowText.reset(), timerShowText.startTimer();
     // Init and show grid
@@ -454,7 +452,6 @@ void ofApp::timerShowGridFinished(ofEventArgs &e) {
 }
 
 void ofApp::timerShowTextFinished(ofEventArgs &e) {
-    //
     timerShowText.stopTimer();
 }
 
@@ -467,3 +464,42 @@ void ofApp::randomizeGrid(){
     else gridWidth = 12, gridHeight = 12, gridRes = 16, gridMaxSize = ofRandom(12);
     gridIsSquare = (ofRandom(1)>.5) ? true : false;
 }
+
+
+// VIDEO PLAYER
+//--------------------------------------------------------------
+void ofApp::loadVideos() {
+    videosDir.allowExt("mov");
+    videosDir.listDir(faceVideoPath);
+    videosDir.sort();
+    if(videosDir.size()>videosCount) videosVector.resize(videosCount);
+    else  videosVector.resize(videosDir.size());
+    // iterate through the files and load them into the vector
+    int j = 0;
+    // reverse browsing the videosDir
+    for(int i=(int)videosDir.size()-1; i>=0 && j<videosVector.size(); i--){
+        if ( videosDir.getFile(i).getSize()>100000 ) {
+            videosVector[j].load(videosDir.getPath(i));
+            videosVector[j].setLoopState(OF_LOOP_PALINDROME);
+//            videosVector[j].setSpeed((int)ofGetFrameRate());
+            videosVector[j].play();
+            j++;
+        }
+    }
+}
+
+//--------------------------------------------------------------
+void ofApp::drawVideos() {
+    if (videosVector.size()) for(int i = 0; i < videosVector.size(); i++) videosVector[i].draw((i%2)*96,(i/2)*96, 96, 96);
+}
+
+//--------------------------------------------------------------
+void ofApp::updateVideos() {
+    if (videosVector.size()) for(int i = 0; i < videosVector.size(); i++) videosVector[i].update();
+}
+
+//--------------------------------------------------------------
+void ofApp::stopVideos() {
+    if (videosVector.size()) for(int i = 0; i < videosVector.size(); i++) videosVector[i].stop(), videosVector[i].close();
+}
+

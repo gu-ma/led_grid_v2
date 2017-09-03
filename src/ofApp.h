@@ -82,13 +82,19 @@ public:
     void initVidRecorder();
     void vidRecordingComplete(ofxVideoRecorderOutputFileCompleteEventArgs &args);
     
-    // grid
+    // Grid
     bool showGridElements, gridIsSquare;
     int gridWidth, gridHeight, gridRes, gridMinSize, gridMaxSize;
     float initTimeGrid;
     Grid grid;
     void randomizeGrid();
-
+    
+    // Video Player
+    void loadVideos(), drawVideos(), stopVideos(), updateVideos();
+    int dirSize, videosCount;
+    ofDirectory videosDir;
+    //    vector<ofxHAPAVPlayer> videosVector;
+    vector<ofVideoPlayer> videosVector;
     
 };
 
