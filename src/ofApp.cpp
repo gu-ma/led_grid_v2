@@ -3,11 +3,13 @@
 // CORE
 //--------------------------------------------------------------
 void ofApp::setup(){
+    ofSetLogLevel(OF_LOG_VERBOSE);
     ofSetFullscreen(true);
     ofSetBackgroundColor(0);
     #ifdef _USE_LIVE_VIDEO
 //        grabber.setup(1920, 1080);
-        grabber.setup(1024, 768);
+//        grabber.setup(1024, 768);
+        blackCam.setup(1920, 1080, 25, 0, ofxBlackMagic::LOW_LATENCY);
     #else
         video.load("vids/motinas_multi_face_fast.mp4"); video.play();
     #endif
@@ -15,7 +17,6 @@ void ofApp::setup(){
     initTracker();
     initVidRecorder();
     initTimers();
-
 }
 
 //--------------------------------------------------------------
@@ -24,7 +25,8 @@ void ofApp::update(){
     // update
     newFrame = false;
     #ifdef _USE_LIVE_VIDEO
-        grabber.update(); newFrame = grabber.isFrameNew();
+//        grabber.update(); newFrame = grabber.isFrameNew();
+        newFrame = blackCam.update();
     #else
         video.update(); newFrame = video.isFrameNew();
     #endif
@@ -33,7 +35,8 @@ void ofApp::update(){
         
         // capture
         #ifdef _USE_LIVE_VIDEO
-            srcImg.setFromPixels(grabber.getPixels());
+//            srcImg.setFromPixels(grabber.getPixels());
+            srcImg.setFromPixels(blackCam.getColorPixels());
         #else
             srcImg.setFromPixels(video.getPixels());
         #endif
@@ -232,7 +235,7 @@ void ofApp::exit(){
     //
     ofRemoveListener(vidRecorder.outputFileCompleteEvent, this, &ofApp::vidRecordingComplete);
     vidRecorder.close();
-//    blackCam.close();
+    blackCam.close();
 //    if (live.isLoaded()) live.stop();
 }
 
@@ -261,7 +264,7 @@ void ofApp::initVar(){
     srcImgScale = 1;
     
     // timers
-    timeToSleep = 5000; // time before entering idle mode
+    timeToSleep = 2000; // time before entering idle mode
     timeToWake = 2000; // time before exiting idle mode
     timeToLock = 2000, // Time before locking up a face
     timeToShowGrid = 2000; // time before grid
@@ -270,7 +273,7 @@ void ofApp::initVar(){
 
     // tracker
     trackerFaceDetectorImageSize = 2000000, trackerLandmarkDetectorImageSize = 2000000;
-    secondToAgeCoef = 50, ageToLock = timeToLock / secondToAgeCoef;
+    secondToAgeCoef = 70, ageToLock = timeToLock / secondToAgeCoef;
     trackerIsThreaded = true;
     //
     faceImgSize = 256, desiredLeftEyeX = 0.39, desiredLeftEyeY = 0.43, faceScaleRatio = 2.6;
@@ -281,7 +284,7 @@ void ofApp::initVar(){
     srcImgIsCropped = true, srcImgIsFiltered = true, srcImgIsColored = false;
     
     // video recording + playing
-    faceVideoPath = "output"; videosCount = 4;
+    faceVideoPath = "output"; videosCount = 64;
 
     // grid
     showGrid = false, showGridElements = false, gridIsSquare = true;
@@ -382,6 +385,10 @@ void ofApp::drawGui(){
         ImGui::DragInt("H", &outputSizeH, 1, 1, ofGetWindowHeight()-outputPositionY, "%.0f px");
         ImGui::NextColumn();
     }
+    if (ImGui::CollapsingHeader("Playback", false)) {
+        ImGui::Text("Overall");
+        ImGui::SliderInt("videosCount", &videosCount, 1, 144);
+    }
     gui.end();
 }
 
@@ -427,6 +434,7 @@ void ofApp::timerSleepFinished(ofEventArgs &e) {
     ageToLock = timeToLock/secondToAgeCoef + timeToWake/secondToAgeCoef;
     // Start Videos
     loadVideos();
+    playVideos();
     // Adjust volumes
     isIdle = true;
 }
@@ -472,30 +480,52 @@ void ofApp::loadVideos() {
     videosDir.allowExt("mov");
     videosDir.listDir(faceVideoPath);
     videosDir.sort();
-    if(videosDir.size()>videosCount) videosVector.resize(videosCount);
-    else  videosVector.resize(videosDir.size());
+//    if(videosDir.size()>videosCount) videosVector.resize(videosCount);
+//    else  videosVector.resize(videosDir.size());
     // iterate through the files and load them into the vector
-    int j = 0;
+//    int j = 0;
     // reverse browsing the videosDir
-    for(int i=(int)videosDir.size()-1; i>=0 && j<videosVector.size(); i--){
+//    for(int i=(int)videosDir.size()-1; i>=0 && j<videosVector.size(); i--){
+//        if ( videosDir.getFile(i).getSize()>1000000 ) {
+//            videosVector[j].load(videosDir.getPath(i));
+//            videosVector[j].setLoopState(OF_LOOP_PALINDROME);
+////            videosVector[j].setSpeed((int)ofGetFrameRate());
+//            videosVector[j].play();
+//            j++;
+//        }
+//    }
+    videosVector.resize(videosCount);
+    int i = videosDir.size()-1, j = 0;
+    while (j<videosVector.size()){
         if ( videosDir.getFile(i).getSize()>100000 ) {
             videosVector[j].load(videosDir.getPath(i));
             videosVector[j].setLoopState(OF_LOOP_PALINDROME);
-//            videosVector[j].setSpeed((int)ofGetFrameRate());
-            videosVector[j].play();
+//            videosVector[j].play();
             j++;
         }
+        i = (i>0) ? i-1 : videosDir.size()-1;
     }
 }
 
 //--------------------------------------------------------------
 void ofApp::drawVideos() {
-    if (videosVector.size()) for(int i = 0; i < videosVector.size(); i++) videosVector[i].draw((i%2)*96,(i/2)*96, 96, 96);
+    int columns = sqrt(videosCount);
+    if (videosVector.size()) {
+        for(int i = 0; i < pow(columns,2); i++) {
+            videosVector[i%videosVector.size()].draw((i%columns)*outputSizeW/columns, (i/columns)*outputSizeH/columns, outputSizeW/columns, outputSizeW/columns);
+        }
+    }
+    cout << videosVector.size() <<endl;
 }
 
 //--------------------------------------------------------------
 void ofApp::updateVideos() {
     if (videosVector.size()) for(int i = 0; i < videosVector.size(); i++) videosVector[i].update();
+}
+
+//--------------------------------------------------------------
+void ofApp::playVideos() {
+    if (videosVector.size()) for(int i = 0; i < videosVector.size(); i++) videosVector[i].play();
 }
 
 //--------------------------------------------------------------

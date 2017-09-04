@@ -6,16 +6,20 @@
   "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
     "55505DE6675E1AEB4CF72AD63A972936EC984D97" : 9223372036854775807,
     "FD7A2B89530BD82EBC2203E9CB0EF5DCD99A3FD5" : 9223372036854775807,
+    "BC9922FFE483A78DDBB9267B94D68853DF1435F5" : 9223372036854775807,
+    "8671D5E53E4C4F4D77CFBBE6EE595FBE78BE011E" : 9223372036854775807,
     "4131F34236DEB94090351DE98CD44A123F2873AB" : 9223372036854775807,
     "86145F1292B789AB93966AE12565F1D778504ABC" : 9223372036854775807,
     "3408B309914B0639E8D618139E80EF3032A46163" : 9223372036854775807,
     "E0535550E19824754C404DB0DDE5EC8ABB043726" : 9223372036854775807,
     "37526DA425E5430474A14FBFA1BC4525160B5FC1" : 9223372036854775807
   },
-  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "B2D45945-5011-43BD-AEB3-9E2FB0D45883",
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "54837A11-DD64-4FF2-AD0C-EE0D6BE330A3",
   "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
     "55505DE6675E1AEB4CF72AD63A972936EC984D97" : "..\/..\/addons\/ofxImGui",
     "FD7A2B89530BD82EBC2203E9CB0EF5DCD99A3FD5" : "led_grid_v2\/",
+    "BC9922FFE483A78DDBB9267B94D68853DF1435F5" : "..\/..\/addons\/ofxBlackmagic",
+    "8671D5E53E4C4F4D77CFBBE6EE595FBE78BE011E" : "..\/..\/addons\/ofxHAPAVPlayer",
     "4131F34236DEB94090351DE98CD44A123F2873AB" : "..\/..\/addons\/ofxVideoRecorder",
     "86145F1292B789AB93966AE12565F1D778504ABC" : "..\/..\/addons\/ofxEasing",
     "3408B309914B0639E8D618139E80EF3032A46163" : "..\/..\/addons\/ofxFaceTracker2",
@@ -50,6 +54,16 @@
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/arturoc\/ofxEasing.git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "86145F1292B789AB93966AE12565F1D778504ABC"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/gameoverhack\/ofxHAPAVPlayer.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "8671D5E53E4C4F4D77CFBBE6EE595FBE78BE011E"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/kylemcdonald\/ofxBlackmagic.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "BC9922FFE483A78DDBB9267B94D68853DF1435F5"
     },
     {
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/fx-lange\/ofxTimer.git",

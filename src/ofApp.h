@@ -8,6 +8,8 @@
 #include "ofxOpenCv.h"
 #include "ofxTimer.h"
 #include "ofxEasing.h"
+#include "ofxHAPAVPlayer.h"
+#include "ofxBlackMagic.h"
 // local files
 #include "Clahe.h"
 #include "FaceUtils.h"
@@ -90,11 +92,14 @@ public:
     void randomizeGrid();
     
     // Video Player
-    void loadVideos(), drawVideos(), stopVideos(), updateVideos();
+    void loadVideos(), drawVideos(), playVideos(), stopVideos(), updateVideos();
     int dirSize, videosCount;
     ofDirectory videosDir;
-    //    vector<ofxHAPAVPlayer> videosVector;
-    vector<ofVideoPlayer> videosVector;
+    vector<ofxHAPAVPlayer> videosVector;
+//    vector<ofVideoPlayer> videosVector;
+    
+    // BlackMagic
+    ofxBlackMagic blackCam;
     
 };
 
