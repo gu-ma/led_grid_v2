@@ -33,6 +33,8 @@ public:
     bool isIdle, facesFound, faceLocked, lockedFaceFound, showGrid, showText, newFrame, fullScreen;
     int outputPositionX, outputPositionY, outputSizeW, outputSizeH;
     float sceneScale;
+    // Draw
+    void drawCounter(const int &x, const int &y);
     
     // Capture
     ofVideoGrabber grabber;
@@ -79,7 +81,7 @@ public:
     int filterClaheClipLimit;
     bool srcImgIsCropped, srcImgIsFiltered, srcImgIsColored;
     
-    // video recording
+    // Video recording
     ofxVideoRecorder vidRecorder;
     string faceVideoPath;
     void initVidRecorder();
@@ -110,7 +112,8 @@ public:
     MiscUtils utils;
 //    string wrapString(string text, int width, ofTrueTypeFont textField);
     void loadTextFile();
-    
+    void drawTextFrame(const ofTrueTypeFont &txtFont, string &txt, const int &x, const int &y, const int &w, const int &h, const int &padding);
+
     // TTS
     LogAudio log;
     

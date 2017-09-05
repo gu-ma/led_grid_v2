@@ -133,7 +133,7 @@ void ofApp::update(){
             // Stop timers
             timerShowGrid.reset(), timerShowGrid.stopTimer();
             timerShowText.reset(), timerShowText.stopTimer();
-            showGrid = false;
+            showGrid = false, showText = false;
         } else if (!showGrid) {
             // Start gridTimer
             timerShowGrid.startTimer();
@@ -202,13 +202,16 @@ void ofApp::draw(){
     ofPopMatrix();
     
     // Draw Output
+    // rectangs marker
     ofPushStyle();
         ofSetColor(255,0,0);
         ofDrawRectangle(outputPositionX-2, outputPositionY-2, outputSizeW+4, outputSizeH+4);
     ofPopStyle();
     ofPushMatrix();
         ofTranslate(outputPositionX, outputPositionY);
+        // Videos if idle
         if (isIdle) drawVideos();
+        // srcImg + tracker if no face are locked
         else if (!lockedFaceFound) {
             srcImg.draw(0, 0, outputSizeW, outputSizeW);
             ofPushMatrix();
@@ -216,8 +219,18 @@ void ofApp::draw(){
                 tracker.drawDebug();
             ofPopMatrix();
         } else alignedFace.draw(0, 0, outputSizeW, outputSizeW);
+        // Grid
         if (showGrid) grid.draw(0,0);
+        // Text
+        if (showText) {
+            int padding = 4, s = 32, w = s*2;
+            if (textContentIndex==0) drawTextFrame(textDisplay[0], textContent[0], s*2, 0, s*2, s*2, padding);
+            if (textContentIndex==1) drawTextFrame(textDisplay[0], textContent[1], s, s*3, s*2, s*2, padding);
+            if (textContentIndex==2) drawTextFrame(textDisplay[0], textContent[2], s*4, s*4, s*2, s*2, padding);
+        }
+        drawCounter(161,174);
     ofPopMatrix();
+    
     
     // Draw text UI
     ofDrawBitmapStringHighlight("Framerate : " + ofToString(ofGetFrameRate()), 10, 20);
@@ -454,6 +467,8 @@ void ofApp::timerSleepFinished(ofEventArgs &e) {
     // Start Videos
     loadVideos();
     playVideos();
+    // start timer to show text
+    timerShowText.reset(), timerShowText.startTimer();
     // Adjust volumes
     isIdle = true;
 }
@@ -496,7 +511,7 @@ void ofApp::timerShowTextFinished(ofEventArgs &e) {
     textContent.at(textContentIndex).clear();
 
     // restart timer
-    float t = (textContentIndex == 0) ? ofRandom(timeToShowText, timeToShowText*2) : 4000+ofRandom(2000);
+    float t = (textContentIndex == 0) ? ofRandom(timeToShowText, timeToShowText*2) : 6000+ofRandom(4000);
     timerShowText.setTimer(t);
     timerShowText.startTimer();
     
@@ -530,6 +545,31 @@ void ofApp::loadTextFile() {
         }
     }
     textFileIndex = ofRandom(textFileLines.size()-1);
+}
+
+//--------------------------------------------------------------
+void ofApp::drawTextFrame(const ofTrueTypeFont &txtFont, string &txt, const int &x, const int &y, const int &w, const int &h, const int &padding) {
+    ofPushStyle();
+        ofSetColor(ofColor(255,50,0,220));
+        ofDrawRectangle(x, y, w, h);
+        ofSetColor(255);
+        txtFont.drawString(utils.wrapString(txt, w-padding*2, txtFont), x+padding, y+padding+4*2);
+    ofPopStyle();
+}
+
+//--------------------------------------------------------------
+void ofApp::drawCounter(const int &x, const int &y) {
+    // draw Smiley + counter
+    ofPushStyle();
+        ofPushMatrix();
+            ofTranslate(x, y);
+            ofSetColor(ofColor::red);
+            ofDrawCircle(6, 5, 1);
+            ofDrawCircle(12, 5, 1);
+            ofDrawRectangle(5, 10, 8, 1);
+            ofDrawBitmapString(ofToString(tracker.size()), 18, 12);
+        ofPopStyle();
+    ofPopMatrix();
 }
 
 
