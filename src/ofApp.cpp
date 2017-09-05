@@ -3,17 +3,19 @@
 // CORE
 //--------------------------------------------------------------
 void ofApp::setup(){
-    ofSetLogLevel(OF_LOG_VERBOSE);
+//    ofSetLogLevel(OF_LOG_VERBOSE);
     ofSetFullscreen(true);
     ofSetBackgroundColor(0);
     #ifdef _USE_LIVE_VIDEO
 //        grabber.setup(1920, 1080);
 //        grabber.setup(1024, 768);
-        blackCam.setup(1920, 1080, 25, 0, ofxBlackMagic::LOW_LATENCY);
+        blackCam.setup(1920, 1080, 30);
     #else
         video.load("vids/motinas_multi_face_fast.mp4"); video.play();
     #endif
     initVar();
+    loadTextFile();
+    log.start();
     initTracker();
     initVidRecorder();
     initTimers();
@@ -21,8 +23,11 @@ void ofApp::setup(){
 
 //--------------------------------------------------------------
 void ofApp::update(){
+
+    if (isIdle) updateVideos();
     
-    // update
+    // ============
+    // update image
     newFrame = false;
     #ifdef _USE_LIVE_VIDEO
 //        grabber.update(); newFrame = grabber.isFrameNew();
@@ -36,7 +41,7 @@ void ofApp::update(){
         // capture
         #ifdef _USE_LIVE_VIDEO
 //            srcImg.setFromPixels(grabber.getPixels());
-            srcImg.setFromPixels(blackCam.getColorPixels());
+            srcImg.setFromPixels(blackCam.getGrayPixels());
         #else
             srcImg.setFromPixels(video.getPixels());
         #endif
@@ -50,114 +55,121 @@ void ofApp::update(){
         
         // Update Tracker
         tracker.update(srcImg.getPixels());
-        
-        // Sleep wake logic
-        if ( tracker.size() == 0 ) {
-            // Faces were found before
-            if (facesFound) {
-                timerSleep.reset(), timerSleep.startTimer(); // reset and start sleep timer
-                timerWake.stopTimer(), timerShowGrid.stopTimer(); // stop the timers
-                facesFound = false; // reset bools
-            }
-        } else if (!facesFound) {
-            // It comes from idle mode
-            if (isIdle) timerWake.reset(), timerWake.startTimer(); // reset and start the wake timer
-            timerSleep.stopTimer(); // stop the sleep timer
-            facesFound = true;
+    }
+
+    // ============
+    // Sleep wake logic
+    if ( tracker.size() == 0 ) {
+        // Faces were found before
+        if (facesFound) {
+            timerSleep.reset(), timerSleep.startTimer(); // reset and start sleep timer
+            timerWake.stopTimer(), timerShowGrid.stopTimer(), timerShowText.stopTimer(); // stop the timers
+            vidRecorder.close();
+            facesFound = false; // reset bools
         }
+    } else if (!facesFound) {
+        // It comes from idle mode
+        if (isIdle) timerWake.reset(), timerWake.startTimer(); // reset and start the wake timer
+        timerSleep.stopTimer(); // stop the sleep timer
+        facesFound = true;
+    }
+
+    // ============
+    // If not in Idle mode
+    if (!isIdle) {
         
-        // If it's not in Idle mode
-        if (!isIdle) {
+        // misc var
+        agedImages.clear();
+        lockedFaceFound = false;
+        vector<Grid::PixelsItem> pis;
+        
+        for(auto instance : tracker.getInstances()) {
             
-            // misc var
-            agedImages.clear();
-            lockedFaceFound = false;
-            vector<Grid::PixelsItem> pis;
+            if ( instance.getAge() > ageToLock && !faceLocked ) {
+                //
+                faceLockedLabel = instance.getLabel();
+                faceLocked = true;
+                // start Video recording
+                vidRecorder.setup(faceVideoPath+"/"+ofGetTimestampString("%Y%m%d-%H%M%S")+"-"+ofToString(faceLockedLabel)+".mov", faceImgSize, faceImgSize, (int)ofGetFrameRate() );
+                vidRecorder.start();
+                // faceUtils.resetLandmarksAverage();
+            }
             
-            for(auto instance : tracker.getInstances()) {
-                
-                if ( instance.getAge() > ageToLock && !faceLocked ) {
-                    //
-                    faceLockedLabel = instance.getLabel();
-                    faceLocked = true;
-                    // start Video recording
-                    vidRecorder.setup(faceVideoPath+"/"+ofGetTimestampString("%Y%m%d-%H%M%S")+"-"+ofToString(faceLockedLabel)+".mov", faceImgSize, faceImgSize, (int)ofGetFrameRate() );
-                    vidRecorder.start();
-                    // faceUtils.resetLandmarksAverage();
-                }
-                
-                // Get aligned face
-                ofImage img = faceUtils.getAlignedFace(srcImg, instance, faceImgSize, desiredLeftEyeX, desiredLeftEyeY, faceScaleRatio, faceRotate, faceConstrain);
-                // save to agedImages vector
-                if ( img.isAllocated() ) agedImages.push_back(IndexedImages(instance.getLabel(),img));
-                
-                // if the instance is the face locked
-                if ( img.isAllocated() && instance.getLabel()==faceLockedLabel) {
-                    // add image to vid recorder
-                    if (vidRecorder.isInitialized()) vidRecorder.addFrame(img.getPixels());
-                    // update averages values
-                    faceUtils.updateLandmarksAverage(instance);
-                    // Push elements to the grid
+            // Get aligned face
+            ofImage img = faceUtils.getAlignedFace(srcImg, instance, faceImgSize, desiredLeftEyeX, desiredLeftEyeY, faceScaleRatio, faceRotate, faceConstrain);
+            // save to agedImages vector
+            if ( img.isAllocated() ) agedImages.push_back(IndexedImages(instance.getLabel(),img));
+            
+            // if the instance is the face locked
+            if ( img.isAllocated() && instance.getLabel()==faceLockedLabel) {
+                // add image to vid recorder
+                if (vidRecorder.isInitialized()) vidRecorder.addFrame(img.getPixels());
+                // update averages values
+                faceUtils.updateLandmarksAverage(instance);
+                // Push elements to the grid
 //                    pushToGrid();
-                    if (showGrid) {
-                        for (int i=0; i<5; i++) {
-                            ofImage img0 = faceUtils.getLandmarkImg(srcImg, instance, 0, faceImgSize/4, 80);
-                            ofImage img1 = faceUtils.getLandmarkImg(srcImg, instance, 1, faceImgSize/4, 30);
-                            ofImage img2 = faceUtils.getLandmarkImg(srcImg, instance, 2, faceImgSize/4, 30);
-                            ofImage img3 = faceUtils.getLandmarkImg(srcImg, instance, 3, faceImgSize/4, 40);
-                            ofImage img4 = faceUtils.getLandmarkImg(srcImg, instance, 4, faceImgSize/4, 40);
-                            if (img0.isAllocated()) pis.push_back(Grid::PixelsItem(img0.getPixels(), Grid::face));
-                            if (img1.isAllocated()) pis.push_back(Grid::PixelsItem(img1.getPixels(), Grid::leftEye));
-                            if (img2.isAllocated()) pis.push_back(Grid::PixelsItem(img2.getPixels(), Grid::rightEye));
-                            if (img3.isAllocated()) pis.push_back(Grid::PixelsItem(img3.getPixels(), Grid::nose));
-                            if (img4.isAllocated()) pis.push_back(Grid::PixelsItem(img4.getPixels(), Grid::mouth));
-                        }
-                    }
-                    //
-                    lockedFaceFound = true;
-                }
-                
-            }
-            
-            // If the locked face is not found
-            if (!lockedFaceFound) {
-                // Stop gridTimer
-                timerShowGrid.reset(), timerShowGrid.stopTimer();
-                showGrid = false;
-            } else if (!showGrid) {
-                // Start gridTimer
-                timerShowGrid.startTimer();
-                // set age to Lock to default
-                ageToLock = timeToLock/secondToAgeCoef;
-            }
-            
-            // If the face locked does not exist anymore
-            if ( !tracker.faceRectanglesTracker.existsCurrent(faceLockedLabel) ) {
-                faceLocked = false;
-                vidRecorder.close();
-            }
-            
-            // Grid
-            if (showGrid) {
-                // update
-                grid.updatePixels(pis);
-                // easing of alpha
-                int s = grid.GridElements.size();
-                if (s) {
-                    for (int i=0; i<s; i++) {
-                        float t = 2.f, d = .5;
-                        auto startTime = initTimeGrid+(float)i/s*t, endTime = initTimeGrid+(float)i/s*t + d, now = ofGetElapsedTimef();
-                        grid.GridElements.at(i).setAlpha( ofxeasing::map_clamp(now, startTime, endTime, 0, 255, &ofxeasing::linear::easeOut) );
+                if (showGrid) {
+                    for (int i=0; i<5; i++) {
+                        ofImage img0 = faceUtils.getLandmarkImg(srcImg, instance, 0, faceImgSize/4, 80);
+                        ofImage img1 = faceUtils.getLandmarkImg(srcImg, instance, 1, faceImgSize/4, 30);
+                        ofImage img2 = faceUtils.getLandmarkImg(srcImg, instance, 2, faceImgSize/4, 30);
+                        ofImage img3 = faceUtils.getLandmarkImg(srcImg, instance, 3, faceImgSize/4, 40);
+                        ofImage img4 = faceUtils.getLandmarkImg(srcImg, instance, 4, faceImgSize/4, 40);
+                        if (img0.isAllocated()) pis.push_back(Grid::PixelsItem(img0.getPixels(), Grid::face));
+                        if (img1.isAllocated()) pis.push_back(Grid::PixelsItem(img1.getPixels(), Grid::leftEye));
+                        if (img2.isAllocated()) pis.push_back(Grid::PixelsItem(img2.getPixels(), Grid::rightEye));
+                        if (img3.isAllocated()) pis.push_back(Grid::PixelsItem(img3.getPixels(), Grid::nose));
+                        if (img4.isAllocated()) pis.push_back(Grid::PixelsItem(img4.getPixels(), Grid::mouth));
                     }
                 }
+                //
+                lockedFaceFound = true;
             }
             
-            // sort aged Images vector
-            std::sort(agedImages.begin(), agedImages.end(), byFirst());
-            
-        } else {
-            updateVideos();
         }
+        
+        // If the locked face is not visible
+        if (!lockedFaceFound) {
+            // Stop timers
+            timerShowGrid.reset(), timerShowGrid.stopTimer();
+            timerShowText.reset(), timerShowText.stopTimer();
+            showGrid = false;
+        } else if (!showGrid) {
+            // Start gridTimer
+            timerShowGrid.startTimer();
+            // set age to Lock to default
+            ageToLock = timeToLock/secondToAgeCoef;
+        }
+        
+        // If the face locked does not exist anymore
+        if ( !tracker.faceRectanglesTracker.existsCurrent(faceLockedLabel) ) {
+            faceLocked = false;
+            vidRecorder.close();
+        }
+        
+        // Grid
+        if (showGrid) {
+            // update
+            grid.updatePixels(pis);
+            // easing of alpha
+            int s = grid.GridElements.size();
+            if (s) {
+                for (int i=0; i<s; i++) {
+                    float t = 2.f, d = .5;
+                    auto startTime = initTimeGrid+(float)i/s*t, endTime = initTimeGrid+(float)i/s*t + d, now = ofGetElapsedTimef();
+                    grid.GridElements.at(i).setAlpha( ofxeasing::map_clamp(now, startTime, endTime, 0, 255, &ofxeasing::linear::easeOut) );
+                }
+            }
+        }
+        
+        // sort aged Images vector
+        std::sort(agedImages.begin(), agedImages.end(), byFirst());
+        
+    }
+    
+    // text + speech
+    if (log.speechUpdate()) {
+        textContent.at(textContentIndex).append(log.getCurrentWord() + " ");
     }
 }
 
@@ -256,9 +268,7 @@ void ofApp::keyPressed(int key){
 void ofApp::initVar(){
     // general
     isIdle = false, facesFound = false, lockedFaceFound = false,  faceLocked = false, showGrid = false, showText = false;
-    outputPositionX = 600, outputPositionY = 600, outputSizeW = 192, outputSizeH = 192;
-    
-    sceneScale = 1;
+    outputPositionX = 600, outputPositionY = 600, outputSizeW = 192, outputSizeH = 192, sceneScale = .5;
     
     // capture
     srcImgScale = 1;
@@ -268,7 +278,7 @@ void ofApp::initVar(){
     timeToWake = 2000; // time before exiting idle mode
     timeToLock = 2000, // Time before locking up a face
     timeToShowGrid = 2000; // time before grid
-    timeToShowText = 20000; // time before showing the text
+    timeToShowText = 2000; // time before showing the text
     timeToShowNextText = 5000; // time before showing the next bunch of text
 
     // tracker
@@ -291,7 +301,14 @@ void ofApp::initVar(){
 //    gridWidth = 24, gridHeight = 24, gridRes = 16, gridMinSize = 0, gridMaxSize = 12;
     gridWidth = 12, gridHeight = 12, gridRes = 16, gridMinSize = 0, gridMaxSize = 12;
     
-    
+    // text
+    textContent.resize(3);
+    textDisplay.resize(3);
+    for (auto & t : textDisplay) {
+        t.load("fonts/pixelmix.ttf", 6, false, false, false, 144);
+        t.setLineHeight(10);
+    }
+    textFileIndex = 0, textContentIndex = 0;
 }
 
 // GUI
@@ -300,7 +317,7 @@ void ofApp::drawGui(){
     gui.begin();
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     if (ImGui::CollapsingHeader("General", false)) {
-        ImGui::SliderFloat("Scale Source", &srcImgScale, .1, 3);
+        ImGui::DragFloat("Scale Source", &srcImgScale, .1, 3);
         ImGui::SliderFloat("Scale Scene", &sceneScale, .1, 2);
         ImGui::SliderInt("filterClaheClipLimit", &filterClaheClipLimit, 0, 6);
         ImGui::Checkbox("Filtered", &srcImgIsFiltered); ImGui::SameLine();
@@ -321,7 +338,7 @@ void ofApp::drawGui(){
         ImGui::SliderInt("Img Size", &faceImgSize, 64, 512, "%.0f px");
         ImGui::SliderFloat("desiredLeftEyeX", &desiredLeftEyeX, 0, .5, "%.02f %%");
         ImGui::SliderFloat("desiredLeftEyeY", &desiredLeftEyeY, 0, .5, "%.02f %%");
-        ImGui::SliderFloat("scale amount", &faceScaleRatio, 1, 5, "%.0f");
+        ImGui::SliderFloat("scale amount", &faceScaleRatio, 1, 5);
         ImGui::Checkbox("Rotate", &faceRotate);
         ImGui::Checkbox("Constrain only", &faceConstrain);
         //
@@ -364,7 +381,6 @@ void ofApp::drawGui(){
         ImGui::Text("Options");
         ImGui::Checkbox("grid Is Square", &gridIsSquare);
         ImGui::Checkbox("show Grid", &showGrid);
-        ImGui::NextColumn();
         //
         ImGui::Columns(1);
         ImGui::Separator();
@@ -383,7 +399,10 @@ void ofApp::drawGui(){
         ImGui::Text("Size");
         ImGui::DragInt("W", &outputSizeW, 1, 1, ofGetWindowWidth()-outputPositionX, "%.0f px");
         ImGui::DragInt("H", &outputSizeH, 1, 1, ofGetWindowHeight()-outputPositionY, "%.0f px");
-        ImGui::NextColumn();
+        //
+        ImGui::Columns(1);
+        ImGui::Separator();
+
     }
     if (ImGui::CollapsingHeader("Playback", false)) {
         ImGui::Text("Overall");
@@ -460,7 +479,29 @@ void ofApp::timerShowGridFinished(ofEventArgs &e) {
 }
 
 void ofApp::timerShowTextFinished(ofEventArgs &e) {
-    timerShowText.stopTimer();
+    
+    // start log speech
+    if (!log.startSpeaking) {
+        // build speech settings
+        string voice = "Kate", msg = textFileLines.at(textFileIndex), misc = "";
+        log.logAudio(voice, "", "", "130", "1", msg);
+        cout << "SPEECH: " + ofToString(textContentIndex) + " " + msg << endl;
+    }
+    
+    // increment counters
+    textFileIndex = (textFileIndex+1)%textFileLines.size();
+    textContentIndex = (textContentIndex+1)%textContent.size();
+    
+    // clear current text
+    textContent.at(textContentIndex).clear();
+
+    // restart timer
+    float t = (textContentIndex == 0) ? ofRandom(timeToShowText, timeToShowText*2) : 4000+ofRandom(2000);
+    timerShowText.setTimer(t);
+    timerShowText.startTimer();
+    
+    //
+    showText = true;
 }
 
 
@@ -474,26 +515,30 @@ void ofApp::randomizeGrid(){
 }
 
 
+// TEXT
+//--------------------------------------------------------------
+void ofApp::loadTextFile() {
+    // text loading
+    ofBuffer buffer = ofBufferFromFile("txt/love_lyrics.txt");
+    //
+    if(buffer.size()) {
+        for (ofBuffer::Line it = buffer.getLines().begin(), end = buffer.getLines().end(); it != end; ++it) {
+            string line = *it;
+            if(line.empty() == false) {
+                textFileLines.push_back(line);
+            }
+        }
+    }
+    textFileIndex = ofRandom(textFileLines.size()-1);
+}
+
+
 // VIDEO PLAYER
 //--------------------------------------------------------------
 void ofApp::loadVideos() {
     videosDir.allowExt("mov");
     videosDir.listDir(faceVideoPath);
     videosDir.sort();
-//    if(videosDir.size()>videosCount) videosVector.resize(videosCount);
-//    else  videosVector.resize(videosDir.size());
-    // iterate through the files and load them into the vector
-//    int j = 0;
-    // reverse browsing the videosDir
-//    for(int i=(int)videosDir.size()-1; i>=0 && j<videosVector.size(); i--){
-//        if ( videosDir.getFile(i).getSize()>1000000 ) {
-//            videosVector[j].load(videosDir.getPath(i));
-//            videosVector[j].setLoopState(OF_LOOP_PALINDROME);
-////            videosVector[j].setSpeed((int)ofGetFrameRate());
-//            videosVector[j].play();
-//            j++;
-//        }
-//    }
     videosVector.resize(videosCount);
     int i = videosDir.size()-1, j = 0;
     while (j<videosVector.size()){
@@ -515,7 +560,6 @@ void ofApp::drawVideos() {
             videosVector[i%videosVector.size()].draw((i%columns)*outputSizeW/columns, (i/columns)*outputSizeH/columns, outputSizeW/columns, outputSizeW/columns);
         }
     }
-    cout << videosVector.size() <<endl;
 }
 
 //--------------------------------------------------------------

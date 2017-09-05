@@ -15,6 +15,7 @@
 #include "FaceUtils.h"
 #include "Grid.h"
 #include "LogAudio.h"
+#include "MiscUtils.h"
 
 #define _USE_LIVE_VIDEO
 
@@ -100,6 +101,19 @@ public:
     
     // BlackMagic
     ofxBlackMagic blackCam;
+    
+    //Text
+    vector<ofTrueTypeFont> textDisplay;
+    vector<string> textFileLines;
+    vector<string> textContent;
+    int textFileIndex, textContentIndex;
+    MiscUtils utils;
+//    string wrapString(string text, int width, ofTrueTypeFont textField);
+    void loadTextFile();
+    
+    // TTS
+    LogAudio log;
+    
     
 };
 
