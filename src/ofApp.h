@@ -10,6 +10,7 @@
 #include "ofxEasing.h"
 #include "ofxHAPAVPlayer.h"
 #include "ofxBlackMagic.h"
+#include "ofxAbletonLive.h"
 // local files
 #include "Clahe.h"
 #include "FaceUtils.h"
@@ -33,6 +34,7 @@ public:
     bool isIdle, facesFound, faceLocked, lockedFaceFound, showGrid, showText, newFrame, fullScreen;
     int outputPositionX, outputPositionY, outputSizeW, outputSizeH;
     float sceneScale;
+    void randomizeSettings();
     // Draw
     void drawCounter(const int &x, const int &y);
     
@@ -92,7 +94,6 @@ public:
     int gridWidth, gridHeight, gridRes, gridMinSize, gridMaxSize;
     float initTimeGrid;
     Grid grid;
-    void randomizeGrid();
     
     // Video Player
     void loadVideos(), drawVideos(), playVideos(), stopVideos(), updateVideos();
@@ -117,6 +118,11 @@ public:
     // TTS
     LogAudio log;
     
+    // Ableton live
+    ofxAbletonLive live;
+    void refreshLive(), initLive(), liveVolumeUp(), liveVolumeDown();
+    vector<float> volumes, startVolumes, endVolumes, initTimesVolumes;
+    bool resetLive;
     
 };
 

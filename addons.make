@@ -1,3 +1,4 @@
+ofxAbletonLive
 ofxBlackmagic
 ofxCv
 ofxEasing
@@ -5,5 +6,6 @@ ofxFaceTracker2
 ofxHAPAVPlayer
 ofxImGui
 ofxOpenCv
+ofxOsc
 ofxTimer
 ofxVideoRecorder

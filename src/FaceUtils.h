@@ -133,7 +133,7 @@ public:
     
     //--------------------------------------------------------------
     ofImage getLandmarkImg(ofImage &srcImg, const ofxFaceTracker2Instance &instance,
-                           int index, int desiredWidth, int sizePct = 30, bool useAvg = true){
+                           int index, int desiredWidth, int sizePct = 30, int offset = 0, bool useAvg = true){
         
         // get face bounding box
         ofRectangle rect = instance.getBoundingBox();
@@ -142,8 +142,8 @@ public:
         ofVec2f landmarkAvg = avgLandmarksPos.at(index);
         
         // calculate landmark position relative to srcImg
-        int x = rect.x + rect.width * landmarkAvg.x / 100;
-        int y = rect.y + rect.height * landmarkAvg.y / 100;
+        int x = rect.x + rect.width * landmarkAvg.x / 100 + offset;
+        int y = rect.y + rect.height * landmarkAvg.y / 100 + offset;
         
         // calculate w / h
         int w = rect.width*sizePct / 100;

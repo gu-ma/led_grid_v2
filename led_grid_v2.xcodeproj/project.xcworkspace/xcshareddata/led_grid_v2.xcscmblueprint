@@ -10,11 +10,12 @@
     "8671D5E53E4C4F4D77CFBBE6EE595FBE78BE011E" : 9223372036854775807,
     "4131F34236DEB94090351DE98CD44A123F2873AB" : 9223372036854775807,
     "86145F1292B789AB93966AE12565F1D778504ABC" : 9223372036854775807,
+    "39642EB9A7960140EE36619E322E5815FF36D10C" : 9223372036854775807,
     "3408B309914B0639E8D618139E80EF3032A46163" : 9223372036854775807,
     "E0535550E19824754C404DB0DDE5EC8ABB043726" : 9223372036854775807,
     "37526DA425E5430474A14FBFA1BC4525160B5FC1" : 9223372036854775807
   },
-  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "54837A11-DD64-4FF2-AD0C-EE0D6BE330A3",
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "63BB2FA2-1198-424D-8965-B42B3EE27ABC",
   "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
     "55505DE6675E1AEB4CF72AD63A972936EC984D97" : "..\/..\/addons\/ofxImGui",
     "FD7A2B89530BD82EBC2203E9CB0EF5DCD99A3FD5" : "led_grid_v2\/",
@@ -22,6 +23,7 @@
     "8671D5E53E4C4F4D77CFBBE6EE595FBE78BE011E" : "..\/..\/addons\/ofxHAPAVPlayer",
     "4131F34236DEB94090351DE98CD44A123F2873AB" : "..\/..\/addons\/ofxVideoRecorder",
     "86145F1292B789AB93966AE12565F1D778504ABC" : "..\/..\/addons\/ofxEasing",
+    "39642EB9A7960140EE36619E322E5815FF36D10C" : "..\/..\/addons\/ofxAbletonLive",
     "3408B309914B0639E8D618139E80EF3032A46163" : "..\/..\/addons\/ofxFaceTracker2",
     "E0535550E19824754C404DB0DDE5EC8ABB043726" : "..\/..\/addons\/ofxTimer",
     "37526DA425E5430474A14FBFA1BC4525160B5FC1" : "..\/..\/addons\/ofxCv"
@@ -39,6 +41,11 @@
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/kylemcdonald\/ofxCv.git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "37526DA425E5430474A14FBFA1BC4525160B5FC1"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/genekogan\/ofxAbletonLive.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "39642EB9A7960140EE36619E322E5815FF36D10C"
     },
     {
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/timscaffidi\/ofxVideoRecorder.git",

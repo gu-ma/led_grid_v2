@@ -19,10 +19,16 @@ void ofApp::setup(){
     initTracker();
     initVidRecorder();
     initTimers();
+    live.setup();
+    initLive();
+
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
+    
+    live.update();
+    refreshLive();
 
     if (isIdle) updateVideos();
     
@@ -107,14 +113,13 @@ void ofApp::update(){
                 // update averages values
                 faceUtils.updateLandmarksAverage(instance);
                 // Push elements to the grid
-//                    pushToGrid();
                 if (showGrid) {
                     for (int i=0; i<5; i++) {
-                        ofImage img0 = faceUtils.getLandmarkImg(srcImg, instance, 0, faceImgSize/4, 80);
-                        ofImage img1 = faceUtils.getLandmarkImg(srcImg, instance, 1, faceImgSize/4, 30);
-                        ofImage img2 = faceUtils.getLandmarkImg(srcImg, instance, 2, faceImgSize/4, 30);
-                        ofImage img3 = faceUtils.getLandmarkImg(srcImg, instance, 3, faceImgSize/4, 40);
-                        ofImage img4 = faceUtils.getLandmarkImg(srcImg, instance, 4, faceImgSize/4, 40);
+                        ofImage img0 = faceUtils.getLandmarkImg(srcImg, instance, 0, faceImgSize/4, 80, i*2);
+                        ofImage img1 = faceUtils.getLandmarkImg(srcImg, instance, 1, faceImgSize/4, 30, i*2);
+                        ofImage img2 = faceUtils.getLandmarkImg(srcImg, instance, 2, faceImgSize/4, 30, i*2);
+                        ofImage img3 = faceUtils.getLandmarkImg(srcImg, instance, 3, faceImgSize/4, 40, i*2);
+                        ofImage img4 = faceUtils.getLandmarkImg(srcImg, instance, 4, faceImgSize/4, 40, i*2);
                         if (img0.isAllocated()) pis.push_back(Grid::PixelsItem(img0.getPixels(), Grid::face));
                         if (img1.isAllocated()) pis.push_back(Grid::PixelsItem(img1.getPixels(), Grid::leftEye));
                         if (img2.isAllocated()) pis.push_back(Grid::PixelsItem(img2.getPixels(), Grid::rightEye));
@@ -261,7 +266,7 @@ void ofApp::exit(){
     ofRemoveListener(vidRecorder.outputFileCompleteEvent, this, &ofApp::vidRecordingComplete);
     vidRecorder.close();
     blackCam.close();
-//    if (live.isLoaded()) live.stop();
+    if (live.isLoaded()) live.stop();
 }
 
 //--------------------------------------------------------------
@@ -272,6 +277,17 @@ void ofApp::keyPressed(int key){
         fullScreen = !fullScreen;
         if(fullScreen) ofSetFullscreen(true);
         else ofSetFullscreen(false);
+    }
+    
+    if (key == '0') initLive();
+    if (key == 'l') live.printAll();
+    if (key == '.') {
+        float v = live.getVolume();
+        live.setVolume( ofClamp(v + 0.1, 0, 1) );
+    }
+    if (key == ',') {
+        float v = live.getVolume();
+        live.setVolume( ofClamp(v - 0.1, 0, 1) );
     }
     
 }
@@ -291,7 +307,7 @@ void ofApp::initVar(){
     timeToWake = 2000; // time before exiting idle mode
     timeToLock = 2000, // Time before locking up a face
     timeToShowGrid = 2000; // time before grid
-    timeToShowText = 2000; // time before showing the text
+    timeToShowText = 8000; // time before showing the text
     timeToShowNextText = 5000; // time before showing the next bunch of text
 
     // tracker
@@ -322,7 +338,24 @@ void ofApp::initVar(){
         t.setLineHeight(10);
     }
     textFileIndex = 0, textContentIndex = 0;
+    
+    // live
+    volumes.assign(5,0), initTimesVolumes.assign(5,0), startVolumes.assign(5,0), endVolumes.assign(5,0);
+    resetLive = true;
+
 }
+
+
+// GENERAL
+//--------------------------------------------------------------
+void ofApp::randomizeSettings(){
+    // grid
+    if (ofRandom(1)>.4) gridWidth = 6, gridHeight = 6, gridRes = 32, gridMaxSize = ofRandom(6);
+    else gridWidth = 12, gridHeight = 12, gridRes = 16, gridMaxSize = ofRandom(12);
+    gridIsSquare = (ofRandom(1)>.5) ? true : false;
+    // face
+}
+
 
 // GUI
 //--------------------------------------------------------------
@@ -374,8 +407,9 @@ void ofApp::drawGui(){
         ImGui::Text("Other");
         if (ImGui::SliderInt("Grid", &timeToShowGrid, 1000, 20000, "%.0f ms")) timerShowGrid.setTimer(timeToShowGrid);
         if (ImGui::SliderInt("Text", &timeToShowText, 1000, 20000, "%.0f ms")) timerShowText.setTimer(timeToShowText);
+        ImGui::SliderInt("Text", &timeToShowNextText, 1000, 20000, "%.0f ms");
         //
-        ImGui::Columns(1);
+        ImGui::Columns(1); 
         ImGui::Separator();
     }
     if (ImGui::CollapsingHeader("Grid ", false)) {
@@ -398,7 +432,7 @@ void ofApp::drawGui(){
         ImGui::Columns(1);
         ImGui::Separator();
         if (ImGui::Button("Refresh")) grid.init(gridWidth, gridHeight, gridRes, gridMinSize, gridMaxSize, gridIsSquare); ImGui::SameLine();
-        if (ImGui::Button("Randomize")) randomizeGrid();
+        if (ImGui::Button("Randomize")) randomizeSettings();
         ImGui::Separator();
     }
     if (ImGui::CollapsingHeader("Output", false)) {
@@ -470,6 +504,8 @@ void ofApp::timerSleepFinished(ofEventArgs &e) {
     // start timer to show text
     timerShowText.reset(), timerShowText.startTimer();
     // Adjust volumes
+    liveVolumeDown();
+    // Idle
     isIdle = true;
 }
 
@@ -479,6 +515,8 @@ void ofApp::timerWakeFinished(ofEventArgs &e) {
     // Stop Videos
     stopVideos();
     // Adjust volumes
+    liveVolumeUp();
+    // Not idle
     isIdle = false;
 }
 
@@ -511,24 +549,13 @@ void ofApp::timerShowTextFinished(ofEventArgs &e) {
     textContent.at(textContentIndex).clear();
 
     // restart timer
-    float t = (textContentIndex == 0) ? ofRandom(timeToShowText, timeToShowText*2) : 6000+ofRandom(4000);
+    float t = (textContentIndex == 0) ? ofRandom(timeToShowText, timeToShowText*2) : timeToShowNextText+ofRandom(timeToShowNextText/2);
     timerShowText.setTimer(t);
     timerShowText.startTimer();
     
     //
     showText = true;
 }
-
-
-// GRID
-//--------------------------------------------------------------
-void ofApp::randomizeGrid(){
-    // grid
-    if (ofRandom(1)>.4) gridWidth = 6, gridHeight = 6, gridRes = 32, gridMaxSize = ofRandom(6);
-    else gridWidth = 12, gridHeight = 12, gridRes = 16, gridMaxSize = ofRandom(12);
-    gridIsSquare = (ofRandom(1)>.5) ? true : false;
-}
-
 
 // TEXT
 //--------------------------------------------------------------
@@ -617,3 +644,58 @@ void ofApp::stopVideos() {
     if (videosVector.size()) for(int i = 0; i < videosVector.size(); i++) videosVector[i].stop(), videosVector[i].close();
 }
 
+
+// LIVE
+//--------------------------------------------------------------
+void ofApp::initLive(){
+    if (live.isLoaded()) {
+        for ( int x=0; x<live.getNumTracks() ; x++ ){
+            ofxAbletonLiveTrack *track = live.getTrack(x);
+            track->setVolume(0);
+        }
+        live.setVolume(0.8);
+        live.stop();
+        live.play();
+        live.setTempo(45);
+        
+    }
+}
+
+//--------------------------------------------------------------
+void ofApp::refreshLive() {
+    if (!live.isLoaded()) return;
+    if (resetLive) {
+        initLive();
+        resetLive = false;
+    }
+    // Easing
+    auto duration = 2.f;
+    for (int i=0; i<volumes.size(); i++) {
+        if ( initTimesVolumes.at(i)!=0 ) {
+            auto endTime = initTimesVolumes.at(i) + duration;
+            auto now = ofGetElapsedTimef();
+            volumes[i] = ofxeasing::map_clamp(now, initTimesVolumes[i], endTime, startVolumes[i], endVolumes[i], &ofxeasing::linear::easeIn);
+        }
+    }
+    // set volumes
+    for ( int i=0; i<live.getNumTracks() ; i++ ) live.getTrack(i)->setVolume(volumes[i]);
+    
+}
+
+//--------------------------------------------------------------
+void ofApp::liveVolumeUp() {
+    initTimesVolumes[0] = ofGetElapsedTimef(), startVolumes[0] = .1, endVolumes[0] = .4;
+    initTimesVolumes[1] = ofGetElapsedTimef(), startVolumes[1] = .1, endVolumes[1] = .6;
+    initTimesVolumes[2] = ofGetElapsedTimef(), startVolumes[2] = .2, endVolumes[2] = .4;
+    initTimesVolumes[3] = ofGetElapsedTimef(), startVolumes[3] = .2, endVolumes[3] = .4;
+    initTimesVolumes[4] = ofGetElapsedTimef(), startVolumes[4] = .2, endVolumes[4] = .6;
+}
+
+//--------------------------------------------------------------
+void ofApp::liveVolumeDown() {
+    initTimesVolumes[0] = ofGetElapsedTimef(), startVolumes[0] = .4, endVolumes[0] = .2;
+    initTimesVolumes[1] = ofGetElapsedTimef(), startVolumes[1] = .6, endVolumes[1] = .2;
+    initTimesVolumes[2] = ofGetElapsedTimef(), startVolumes[2] = .4, endVolumes[2] = .4;
+    initTimesVolumes[3] = ofGetElapsedTimef(), startVolumes[3] = .4, endVolumes[3] = .4;
+    initTimesVolumes[4] = ofGetElapsedTimef(), startVolumes[4] = .6, endVolumes[4] = .4;
+}
