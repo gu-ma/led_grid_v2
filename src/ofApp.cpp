@@ -7,9 +7,9 @@ void ofApp::setup(){
     ofSetFullscreen(true);
     ofSetBackgroundColor(0);
     #ifdef _USE_LIVE_VIDEO
-        grabber.setup(1920, 1080);
+//        grabber.setup(1920, 1080);
 //        grabber.setup(1024, 768);
-//        blackCam.setup(1920, 1080, 30);
+        blackCam.setup(1920, 1080, 30);
     #else
         video.load("vids/motinas_multi_face_fast.mp4"); video.play();
     #endif
@@ -36,8 +36,8 @@ void ofApp::update(){
     // update image
     newFrame = false;
     #ifdef _USE_LIVE_VIDEO
-        grabber.update(); newFrame = grabber.isFrameNew();
-//        newFrame = blackCam.update();
+//        grabber.update(); newFrame = grabber.isFrameNew();
+        newFrame = blackCam.update();
     #else
         video.update(); newFrame = video.isFrameNew();
     #endif
@@ -46,8 +46,8 @@ void ofApp::update(){
         
         // capture
         #ifdef _USE_LIVE_VIDEO
-            srcImg.setFromPixels(grabber.getPixels());
-//            srcImg.setFromPixels(blackCam.getGrayPixels());
+//            srcImg.setFromPixels(grabber.getPixels());
+            srcImg.setFromPixels(blackCam.getGrayPixels());
         #else
             srcImg.setFromPixels(video.getPixels());
         #endif
@@ -317,8 +317,8 @@ void ofApp::keyPressed(int key){
 void ofApp::initVar(){
     // general
     isIdle = false, facesFound = false, lockedFaceFound = false,  faceLocked = false, showGrid = false, showText = false;
-    outputPositionX = 600, outputPositionY = 600, outputSizeW = 192, outputSizeH = 192, sceneScale = .5;
-    colorDark = ofColor::slateGray, colorBright = ofColor::skyBlue;
+    outputPositionX = 0, outputPositionY = 0, outputSizeW = 192, outputSizeH = 192, sceneScale = .5;
+    colorDark = ofColor(100,0,0,230), colorBright = ofColor::crimson;
     
     // capture
     srcImgScale = 1;
@@ -340,7 +340,7 @@ void ofApp::initVar(){
     faceRotate = true, faceConstrain = true;
 
     // filter
-    filterClaheClipLimit = 2;
+    filterClaheClipLimit = 6;
     srcImgIsCropped = true, srcImgIsFiltered = true, srcImgIsColored = false;
     
     // video recording + playing
@@ -718,7 +718,7 @@ void ofApp::liveVolumeUp() {
     initTimesVolumes[1] = ofGetElapsedTimef(), startVolumes[1] = .1, endVolumes[1] = .4;
     initTimesVolumes[2] = ofGetElapsedTimef(), startVolumes[2] = .2, endVolumes[2] = .4;
     initTimesVolumes[3] = ofGetElapsedTimef(), startVolumes[3] = .2, endVolumes[3] = .7;
-    initTimesVolumes[4] = ofGetElapsedTimef(), startVolumes[4] = .2, endVolumes[4] = .4;
+    initTimesVolumes[4] = ofGetElapsedTimef(), startVolumes[4] = .2, endVolumes[4] = .7;
 }
 
 //--------------------------------------------------------------
@@ -727,5 +727,5 @@ void ofApp::liveVolumeDown() {
     initTimesVolumes[1] = ofGetElapsedTimef(), startVolumes[1] = .4, endVolumes[1] = .1;
     initTimesVolumes[2] = ofGetElapsedTimef(), startVolumes[2] = .4, endVolumes[2] = .4;
     initTimesVolumes[3] = ofGetElapsedTimef(), startVolumes[3] = .7, endVolumes[3] = .4;
-    initTimesVolumes[4] = ofGetElapsedTimef(), startVolumes[4] = .4, endVolumes[4] = .1;
+    initTimesVolumes[4] = ofGetElapsedTimef(), startVolumes[4] = .7, endVolumes[4] = .4;
 }
