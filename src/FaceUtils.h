@@ -132,7 +132,7 @@ public:
     
     
     //--------------------------------------------------------------
-    ofImage getLandmarkImg(ofImage &srcImg, const ofxFaceTracker2Instance &instance,
+    ofPixels getLandmarkPixels(ofImage &srcImg, const ofxFaceTracker2Instance &instance,
                            int index, int desiredWidth, int sizePct = 30, int offset = 0, bool useAvg = true){
         
         // get face bounding box
@@ -156,7 +156,7 @@ public:
         ofImage img;
         img.cropFrom(srcImg, x, y, w, w);
         img.resize(desiredWidth, desiredWidth);
-        return img;
+        return img.getPixels();
     
     }
 

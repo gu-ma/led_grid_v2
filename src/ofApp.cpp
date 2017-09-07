@@ -7,9 +7,9 @@ void ofApp::setup(){
     ofSetFullscreen(true);
     ofSetBackgroundColor(0);
     #ifdef _USE_LIVE_VIDEO
-//        grabber.setup(1920, 1080);
+        grabber.setup(1920, 1080);
 //        grabber.setup(1024, 768);
-        blackCam.setup(1920, 1080, 30);
+//        blackCam.setup(1920, 1080, 30);
     #else
         video.load("vids/motinas_multi_face_fast.mp4"); video.play();
     #endif
@@ -36,8 +36,8 @@ void ofApp::update(){
     // update image
     newFrame = false;
     #ifdef _USE_LIVE_VIDEO
-//        grabber.update(); newFrame = grabber.isFrameNew();
-        newFrame = blackCam.update();
+        grabber.update(); newFrame = grabber.isFrameNew();
+//        newFrame = blackCam.update();
     #else
         video.update(); newFrame = video.isFrameNew();
     #endif
@@ -46,8 +46,8 @@ void ofApp::update(){
         
         // capture
         #ifdef _USE_LIVE_VIDEO
-//            srcImg.setFromPixels(grabber.getPixels());
-            srcImg.setFromPixels(blackCam.getGrayPixels());
+            srcImg.setFromPixels(grabber.getPixels());
+//            srcImg.setFromPixels(blackCam.getGrayPixels());
         #else
             srcImg.setFromPixels(video.getPixels());
         #endif
@@ -55,7 +55,7 @@ void ofApp::update(){
         // Resize, mirror, crop, filter
         srcImg.resize(srcImg.getWidth()*srcImgScale, srcImg.getHeight()*srcImgScale);
         srcImg.mirror(false, true);
-        if (srcImgIsCropped) srcImg.crop((srcImg.getWidth()-srcImg.getHeight())/2, 0, srcImg.getHeight(), srcImg.getHeight());
+//        if (srcImgIsCropped) srcImg.crop((srcImg.getWidth()-srcImg.getHeight())/2, 0, srcImg.getHeight(), srcImg.getHeight());
         if (srcImgIsFiltered) clahe.filter(srcImg, srcImg, filterClaheClipLimit, srcImgIsColored);
         srcImg.update();
         
@@ -115,16 +115,28 @@ void ofApp::update(){
                 // Push elements to the grid
                 if (showGrid) {
                     for (int i=0; i<5; i++) {
-                        ofImage img0 = faceUtils.getLandmarkImg(srcImg, instance, 0, faceImgSize/4, 80, i*2);
-                        ofImage img1 = faceUtils.getLandmarkImg(srcImg, instance, 1, faceImgSize/4, 30, i*2);
-                        ofImage img2 = faceUtils.getLandmarkImg(srcImg, instance, 2, faceImgSize/4, 30, i*2);
-                        ofImage img3 = faceUtils.getLandmarkImg(srcImg, instance, 3, faceImgSize/4, 40, i*2);
-                        ofImage img4 = faceUtils.getLandmarkImg(srcImg, instance, 4, faceImgSize/4, 40, i*2);
-                        if (img0.isAllocated()) pis.push_back(Grid::PixelsItem(img0.getPixels(), Grid::face));
-                        if (img1.isAllocated()) pis.push_back(Grid::PixelsItem(img1.getPixels(), Grid::leftEye));
-                        if (img2.isAllocated()) pis.push_back(Grid::PixelsItem(img2.getPixels(), Grid::rightEye));
-                        if (img3.isAllocated()) pis.push_back(Grid::PixelsItem(img3.getPixels(), Grid::nose));
-                        if (img4.isAllocated()) pis.push_back(Grid::PixelsItem(img4.getPixels(), Grid::mouth));
+                        if (!mixElements) {
+                            ofPixels pix;
+                            switch(elementsID) {
+                                case 0: pix = faceUtils.getLandmarkPixels(srcImg, instance, 0, faceImgSize/4, 80, (offsetElements) ? i*4 : i); break;
+                                case 1: pix = faceUtils.getLandmarkPixels(srcImg, instance, 1, faceImgSize/4, 30, (offsetElements) ? i*4 : i); break;
+                                case 2: pix = faceUtils.getLandmarkPixels(srcImg, instance, 2, faceImgSize/4, 30, (offsetElements) ? i*4 : i); break;
+                                case 3: pix = faceUtils.getLandmarkPixels(srcImg, instance, 3, faceImgSize/4, 40, (offsetElements) ? i*4 : i); break;
+                                case 4: pix = faceUtils.getLandmarkPixels(srcImg, instance, 4, faceImgSize/4, 40, (offsetElements) ? i*4 : i); break;
+                            }
+                            pis.push_back(Grid::PixelsItem(pix, Grid::face));
+                        } else {
+                            ofPixels pix00 = faceUtils.getLandmarkPixels(srcImg, instance, 0, faceImgSize/4, 80, (offsetElements) ? i*4 : i);
+                            ofPixels pix01 = faceUtils.getLandmarkPixels(srcImg, instance, 1, faceImgSize/4, 30, (offsetElements) ? i*4 : i);
+                            ofPixels pix02 = faceUtils.getLandmarkPixels(srcImg, instance, 2, faceImgSize/4, 30, (offsetElements) ? i*4 : i);
+                            ofPixels pix03 = faceUtils.getLandmarkPixels(srcImg, instance, 3, faceImgSize/4, 40, (offsetElements) ? i*4 : i);
+                            ofPixels pix04 = faceUtils.getLandmarkPixels(srcImg, instance, 4, faceImgSize/4, 40, (offsetElements) ? i*4 : i);
+                            pis.push_back(Grid::PixelsItem(pix00, Grid::face));
+                            pis.push_back(Grid::PixelsItem(pix01, Grid::leftEye));
+                            pis.push_back(Grid::PixelsItem(pix02, Grid::rightEye));
+                            pis.push_back(Grid::PixelsItem(pix03, Grid::nose));
+                            pis.push_back(Grid::PixelsItem(pix04, Grid::mouth));
+                        }
                     }
                 }
                 //
@@ -197,7 +209,7 @@ void ofApp::draw(){
             if (agedImage.first == faceLockedLabel) {
                 ofPushStyle();
                     ofNoFill();
-                    ofSetColor(255,0,0);
+                    ofSetColor(colorBright);
                     ofDrawRectangle(x, srcImg.getHeight(), faceImgSize, faceImgSize);
                 ofPopStyle();
                 alignedFace = agedImage.second;
@@ -209,7 +221,7 @@ void ofApp::draw(){
     // Draw Output
     // rectangs marker
     ofPushStyle();
-        ofSetColor(255,0,0);
+        ofSetColor(colorDark);
         ofDrawRectangle(outputPositionX-2, outputPositionY-2, outputSizeW+4, outputSizeH+4);
     ofPopStyle();
     ofPushMatrix();
@@ -218,9 +230,12 @@ void ofApp::draw(){
         if (isIdle) drawVideos();
         // srcImg + tracker if no face are locked
         else if (!lockedFaceFound) {
-            srcImg.draw(0, 0, outputSizeW, outputSizeW);
+            if (srcImgIsCropped) srcImg.drawSubsection(0, 0, outputSizeW, outputSizeW, (srcImg.getWidth()-srcImg.getHeight())/2, 0, srcImg.getHeight(), srcImg.getHeight());
+//            if (srcImgIsCropped) srcImg.crop((srcImg.getWidth()-srcImg.getHeight())/2, 0, srcImg.getHeight(), srcImg.getHeight());
+//            srcImg.draw(0, 0, outputSizeW, outputSizeW);
             ofPushMatrix();
-                ofScale(outputSizeW/srcImg.getWidth(), outputSizeW/srcImg.getWidth());
+                ofScale(outputSizeW/srcImg.getHeight(), outputSizeH/srcImg.getHeight());
+                ofTranslate(-(srcImg.getWidth()-srcImg.getHeight())/2, 0);
                 tracker.drawDebug();
             ofPopMatrix();
         } else alignedFace.draw(0, 0, outputSizeW, outputSizeW);
@@ -237,23 +252,24 @@ void ofApp::draw(){
     ofPopMatrix();
     
     
-    // Draw text UI
-    ofDrawBitmapStringHighlight("Framerate : " + ofToString(ofGetFrameRate()), 10, 20);
-    ofDrawBitmapStringHighlight("Tracker thread framerate : " + ofToString(tracker.getThreadFps()), 10, 40);
-    
-    //
-    if (!isIdle) {
-        if (!facesFound) ofDrawBitmapStringHighlight("Idle in: " + ofToString(timerSleep.getTimeLeftInSeconds()), 10, 80, ofColor(200,0,0), ofColor(255));
+    if (showTextUI) {
+        // Draw text UI
+        ofDrawBitmapStringHighlight("Framerate : " + ofToString(ofGetFrameRate()), 10, 20);
+        ofDrawBitmapStringHighlight("Tracker thread framerate : " + ofToString(tracker.getThreadFps()), 10, 40);
         //
-        if (faceLocked) ofDrawBitmapStringHighlight("LOCKED - Face label: " + ofToString(faceLockedLabel), 10, 100, ofColor(150,0,0), ofColor(255));
-        //
-        if (lockedFaceFound) {
-            string grid = (showGrid) ? "GRID" : "Time to Grid: " + ofToString(timerShowGrid.getTimeLeftInSeconds());
-            ofDrawBitmapStringHighlight(grid, 10, 120, ofColor(100,0,0), ofColor(255));
+        if (!isIdle) {
+            if (!facesFound) ofDrawBitmapStringHighlight("Idle in: " + ofToString(timerSleep.getTimeLeftInSeconds()), 10, 80, ofColor(200,0,0), ofColor(255));
+            //
+            if (faceLocked) ofDrawBitmapStringHighlight("LOCKED - Face label: " + ofToString(faceLockedLabel), 10, 100, ofColor(150,0,0), ofColor(255));
+            //
+            if (lockedFaceFound) {
+                string grid = (showGrid) ? "GRID" : "Time to Grid: " + ofToString(timerShowGrid.getTimeLeftInSeconds());
+                ofDrawBitmapStringHighlight(grid, 10, 120, ofColor(100,0,0), ofColor(255));
+            }
+        } else {
+            string idle = (!facesFound) ? "IDLE" : "IDLE - Wake in: " + ofToString(timerWake.getTimeLeftInSeconds());
+            ofDrawBitmapStringHighlight(idle, 10, 80, ofColor(200,0,0), ofColor(255));
         }
-    } else {
-        string idle = (!facesFound) ? "IDLE" : "IDLE - Wake in: " + ofToString(timerWake.getTimeLeftInSeconds());
-        ofDrawBitmapStringHighlight(idle, 10, 80, ofColor(200,0,0), ofColor(255));
     }
 
     // Draw GUI
@@ -272,13 +288,13 @@ void ofApp::exit(){
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
     if (key == ' ') faceLocked = false;
-    
+    if(key == 't') showTextUI = !showTextUI;
     if(key == 'f'){
         fullScreen = !fullScreen;
         if(fullScreen) ofSetFullscreen(true);
         else ofSetFullscreen(false);
     }
-    
+    // Live
     if (key == '0') initLive();
     if (key == 'l') live.printAll();
     if (key == '.') {
@@ -298,6 +314,7 @@ void ofApp::initVar(){
     // general
     isIdle = false, facesFound = false, lockedFaceFound = false,  faceLocked = false, showGrid = false, showText = false;
     outputPositionX = 600, outputPositionY = 600, outputSizeW = 192, outputSizeH = 192, sceneScale = .5;
+    colorDark = ofColor::slateGray, colorBright = ofColor::skyBlue;
     
     // capture
     srcImgScale = 1;
@@ -327,9 +344,8 @@ void ofApp::initVar(){
 
     // grid
     showGrid = false, showGridElements = false, gridIsSquare = true;
-//    gridWidth = 24, gridHeight = 24, gridRes = 16, gridMinSize = 0, gridMaxSize = 12;
-    gridWidth = 12, gridHeight = 12, gridRes = 16, gridMinSize = 0, gridMaxSize = 12;
-    
+    gridWidth = 24, gridHeight = 24, gridRes = 16, gridMinSize = 0, gridMaxSize = 12;
+    mixElements = false, offsetElements = false, elementsID = 0;
     // text
     textContent.resize(3);
     textDisplay.resize(3);
@@ -353,6 +369,12 @@ void ofApp::randomizeSettings(){
     if (ofRandom(1)>.4) gridWidth = 6, gridHeight = 6, gridRes = 32, gridMaxSize = ofRandom(6);
     else gridWidth = 12, gridHeight = 12, gridRes = 16, gridMaxSize = ofRandom(12);
     gridIsSquare = (ofRandom(1)>.5) ? true : false;
+    // grid content
+    if (ofRandom(1)>.5) mixElements = !mixElements;
+    if (mixElements) elementsID = int(ofRandom(5));
+    if (ofRandom(1)>.5) offsetElements = !offsetElements;
+    // Video Playback
+    videosCount = pow(int(ofRandom(1,12)),2);
     // face
 }
 
@@ -432,7 +454,10 @@ void ofApp::drawGui(){
         ImGui::Columns(1);
         ImGui::Separator();
         if (ImGui::Button("Refresh")) grid.init(gridWidth, gridHeight, gridRes, gridMinSize, gridMaxSize, gridIsSquare); ImGui::SameLine();
-        if (ImGui::Button("Randomize")) randomizeSettings();
+        if (ImGui::Button("Randomize")) {
+            randomizeSettings();
+            grid.init(gridWidth, gridHeight, gridRes, gridMinSize, gridMaxSize, gridIsSquare);
+        }
         ImGui::Separator();
     }
     if (ImGui::CollapsingHeader("Output", false)) {
@@ -525,6 +550,7 @@ void ofApp::timerShowGridFinished(ofEventArgs &e) {
     timerShowGrid.stopTimer();
     timerShowText.reset(), timerShowText.startTimer();
     // Init and show grid
+    randomizeSettings();
     grid.init(gridWidth, gridHeight, gridRes, gridMinSize, gridMaxSize, gridIsSquare);
     // Save the time
     initTimeGrid = ofGetElapsedTimef();
@@ -577,7 +603,7 @@ void ofApp::loadTextFile() {
 //--------------------------------------------------------------
 void ofApp::drawTextFrame(const ofTrueTypeFont &txtFont, string &txt, const int &x, const int &y, const int &w, const int &h, const int &padding) {
     ofPushStyle();
-        ofSetColor(ofColor(255,50,0,220));
+        ofSetColor(colorDark);
         ofDrawRectangle(x, y, w, h);
         ofSetColor(255);
         txtFont.drawString(utils.wrapString(txt, w-padding*2, txtFont), x+padding, y+padding+4*2);
@@ -590,7 +616,7 @@ void ofApp::drawCounter(const int &x, const int &y) {
     ofPushStyle();
         ofPushMatrix();
             ofTranslate(x, y);
-            ofSetColor(ofColor::red);
+            ofSetColor(colorBright);
             ofDrawCircle(6, 5, 1);
             ofDrawCircle(12, 5, 1);
             ofDrawRectangle(5, 10, 8, 1);
@@ -684,18 +710,18 @@ void ofApp::refreshLive() {
 
 //--------------------------------------------------------------
 void ofApp::liveVolumeUp() {
-    initTimesVolumes[0] = ofGetElapsedTimef(), startVolumes[0] = .1, endVolumes[0] = .4;
-    initTimesVolumes[1] = ofGetElapsedTimef(), startVolumes[1] = .1, endVolumes[1] = .6;
+    initTimesVolumes[0] = ofGetElapsedTimef(), startVolumes[0] = .1, endVolumes[0] = .5;
+    initTimesVolumes[1] = ofGetElapsedTimef(), startVolumes[1] = .1, endVolumes[1] = .4;
     initTimesVolumes[2] = ofGetElapsedTimef(), startVolumes[2] = .2, endVolumes[2] = .4;
-    initTimesVolumes[3] = ofGetElapsedTimef(), startVolumes[3] = .2, endVolumes[3] = .4;
-    initTimesVolumes[4] = ofGetElapsedTimef(), startVolumes[4] = .2, endVolumes[4] = .6;
+    initTimesVolumes[3] = ofGetElapsedTimef(), startVolumes[3] = .2, endVolumes[3] = .7;
+    initTimesVolumes[4] = ofGetElapsedTimef(), startVolumes[4] = .2, endVolumes[4] = .4;
 }
 
 //--------------------------------------------------------------
 void ofApp::liveVolumeDown() {
-    initTimesVolumes[0] = ofGetElapsedTimef(), startVolumes[0] = .4, endVolumes[0] = .2;
-    initTimesVolumes[1] = ofGetElapsedTimef(), startVolumes[1] = .6, endVolumes[1] = .2;
+    initTimesVolumes[0] = ofGetElapsedTimef(), startVolumes[0] = .5, endVolumes[0] = .3;
+    initTimesVolumes[1] = ofGetElapsedTimef(), startVolumes[1] = .4, endVolumes[1] = .1;
     initTimesVolumes[2] = ofGetElapsedTimef(), startVolumes[2] = .4, endVolumes[2] = .4;
-    initTimesVolumes[3] = ofGetElapsedTimef(), startVolumes[3] = .4, endVolumes[3] = .4;
-    initTimesVolumes[4] = ofGetElapsedTimef(), startVolumes[4] = .6, endVolumes[4] = .4;
+    initTimesVolumes[3] = ofGetElapsedTimef(), startVolumes[3] = .7, endVolumes[3] = .4;
+    initTimesVolumes[4] = ofGetElapsedTimef(), startVolumes[4] = .4, endVolumes[4] = .1;
 }

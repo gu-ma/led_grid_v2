@@ -15,7 +15,7 @@
     "E0535550E19824754C404DB0DDE5EC8ABB043726" : 9223372036854775807,
     "37526DA425E5430474A14FBFA1BC4525160B5FC1" : 9223372036854775807
   },
-  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "63BB2FA2-1198-424D-8965-B42B3EE27ABC",
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "4ED77BD2-60D1-424E-9BA6-5DDAE7656771",
   "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
     "55505DE6675E1AEB4CF72AD63A972936EC984D97" : "..\/..\/addons\/ofxImGui",
     "FD7A2B89530BD82EBC2203E9CB0EF5DCD99A3FD5" : "led_grid_v2\/",
@@ -38,7 +38,7 @@
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "3408B309914B0639E8D618139E80EF3032A46163"
     },
     {
-      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/kylemcdonald\/ofxCv.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:kylemcdonald\/ofxCv.git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "37526DA425E5430474A14FBFA1BC4525160B5FC1"
     },

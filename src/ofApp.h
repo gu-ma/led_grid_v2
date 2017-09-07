@@ -31,10 +31,11 @@ public:
     
     // General
     void initVar();
-    bool isIdle, facesFound, faceLocked, lockedFaceFound, showGrid, showText, newFrame, fullScreen;
+    bool isIdle, facesFound, faceLocked, lockedFaceFound, showGrid, showText, newFrame, fullScreen, showTextUI;
     int outputPositionX, outputPositionY, outputSizeW, outputSizeH;
     float sceneScale;
     void randomizeSettings();
+    ofColor colorDark, colorBright;
     // Draw
     void drawCounter(const int &x, const int &y);
     
@@ -91,8 +92,9 @@ public:
     
     // Grid
     bool showGridElements, gridIsSquare;
-    int gridWidth, gridHeight, gridRes, gridMinSize, gridMaxSize;
+    int gridWidth, gridHeight, gridRes, gridMinSize, gridMaxSize, elementsID;
     float initTimeGrid;
+    bool mixElements, offsetElements;
     Grid grid;
     
     // Video Player
@@ -111,7 +113,6 @@ public:
     vector<string> textContent;
     int textFileIndex, textContentIndex;
     MiscUtils utils;
-//    string wrapString(string text, int width, ofTrueTypeFont textField);
     void loadTextFile();
     void drawTextFrame(const ofTrueTypeFont &txtFont, string &txt, const int &x, const int &y, const int &w, const int &h, const int &padding);
 
