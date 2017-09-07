@@ -106,8 +106,10 @@ void ofApp::update(){
             // save to agedImages vector
             if ( img.isAllocated() ) agedImages.push_back(IndexedImages(instance.getLabel(),img));
             
-            // if the instance is the face locked
+            // if the instance is the face locked and it's visible
             if ( img.isAllocated() && instance.getLabel()==faceLockedLabel) {
+                // Save x, y
+                faceLockedX = instance.getBoundingBox().getX(), faceLockedY = instance.getBoundingBox().getY();
                 // add image to vid recorder
                 if (vidRecorder.isInitialized()) vidRecorder.addFrame(img.getPixels());
                 // update averages values
@@ -142,7 +144,6 @@ void ofApp::update(){
                 //
                 lockedFaceFound = true;
             }
-            
         }
         
         // If the locked face is not visible
@@ -230,12 +231,15 @@ void ofApp::draw(){
         if (isIdle) drawVideos();
         // srcImg + tracker if no face are locked
         else if (!lockedFaceFound) {
-            if (srcImgIsCropped) srcImg.drawSubsection(0, 0, outputSizeW, outputSizeW, (srcImg.getWidth()-srcImg.getHeight())/2, 0, srcImg.getHeight(), srcImg.getHeight());
-//            if (srcImgIsCropped) srcImg.crop((srcImg.getWidth()-srcImg.getHeight())/2, 0, srcImg.getHeight(), srcImg.getHeight());
-//            srcImg.draw(0, 0, outputSizeW, outputSizeW);
+            // Draw srcImg
+            int cropX = (faceLocked) ? int(faceLockedX/640) * 640 : (srcImg.getWidth()-srcImg.getHeight())/2;
+            int cropY = 0;
+            int cropW = srcImg.getHeight();
+            int cropH = srcImg.getHeight();
+            if (srcImgIsCropped) srcImg.drawSubsection(0, 0, outputSizeW, outputSizeW, cropX, cropY, cropW, cropH);
             ofPushMatrix();
                 ofScale(outputSizeW/srcImg.getHeight(), outputSizeH/srcImg.getHeight());
-                ofTranslate(-(srcImg.getWidth()-srcImg.getHeight())/2, 0);
+                ofTranslate(-cropX, cropY);
                 tracker.drawDebug();
             ofPopMatrix();
         } else alignedFace.draw(0, 0, outputSizeW, outputSizeW);

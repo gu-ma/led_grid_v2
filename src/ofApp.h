@@ -58,7 +58,7 @@ public:
     
     // Tracker
     ofxFaceTracker2 tracker;
-    int trackerFaceDetectorImageSize, trackerLandmarkDetectorImageSize, ageToLock, secondToAgeCoef, faceLockedLabel;
+    int trackerFaceDetectorImageSize, trackerLandmarkDetectorImageSize, ageToLock, secondToAgeCoef, faceLockedLabel, faceLockedX, faceLockedY;
     bool trackerIsThreaded;
     void initTracker();
     // Face alignment
