@@ -156,7 +156,7 @@ void ofApp::update(){
             // Start gridTimer
             timerShowGrid.startTimer();
             // set age to Lock to default
-            ageToLock = timeToLock/secondToAgeCoef;
+            ageToLock = timeToLock / secondToAgeCoef;
         }
         
         // If the face locked does not exist anymore
@@ -194,7 +194,6 @@ void ofApp::update(){
 //--------------------------------------------------------------
 void ofApp::draw(){
     
-    //
     ofImage alignedFace;
     
     // Draw source image + tracker
@@ -204,39 +203,38 @@ void ofApp::draw(){
         // Draw tracker landmarks
         tracker.drawDebug();
         // Draw faces
-        int x = 0;
-        for(auto agedImage : agedImages) {
-            agedImage.second.draw(x, srcImg.getHeight());
-            if (agedImage.first == faceLockedLabel) {
+        for(int i=0; i<agedImages.size(); i++) {
+            agedImages[i].second.draw(i*faceImgSize, srcImg.getHeight());
+            if (agedImages[i].first == faceLockedLabel) {
                 ofPushStyle();
                     ofNoFill();
                     ofSetColor(colorBright);
-                    ofDrawRectangle(x, srcImg.getHeight(), faceImgSize, faceImgSize);
+                    ofDrawRectangle(i*faceImgSize, srcImg.getHeight(), faceImgSize, faceImgSize);
                 ofPopStyle();
-                alignedFace = agedImage.second;
+                alignedFace = agedImages[i].second;
             }
-            x += faceImgSize;
         }
     ofPopMatrix();
     
     // Draw Output
-    // rectangs marker
+    // rectangular marker
     ofPushStyle();
         ofSetColor(colorDark);
         ofDrawRectangle(outputPositionX-2, outputPositionY-2, outputSizeW+4, outputSizeH+4);
     ofPopStyle();
+    
     ofPushMatrix();
         ofTranslate(outputPositionX, outputPositionY);
-        // Videos if idle
+        // Draw the videos if idle
         if (isIdle) drawVideos();
-        // srcImg + tracker if no face are locked
+        // srcImg + tracker if no faces are locked
         else if (!lockedFaceFound) {
             // Draw srcImg
-            int cropX = (faceLocked) ? int(faceLockedX/640) * 640 : (srcImg.getWidth()-srcImg.getHeight())/2;
-            int cropY = 0;
-            int cropW = srcImg.getHeight();
+            int cropW = (srcImgIsCropped) ? srcImg.getHeight() : srcImg.getWidth();
             int cropH = srcImg.getHeight();
-            if (srcImgIsCropped) srcImg.drawSubsection(0, 0, outputSizeW, outputSizeW, cropX, cropY, cropW, cropH);
+            int cropX = (faceLocked && srcImgIsCropped) ? ofClamp(int(faceLockedX/640)*640, 0, srcImg.getWidth()-cropW) : (srcImg.getWidth()-srcImg.getHeight())/2;
+            int cropY = 0;
+            srcImg.drawSubsection(0, 0, outputSizeW, outputSizeH, cropX, cropY, cropW, cropH);
             ofPushMatrix();
                 ofScale(outputSizeW/srcImg.getHeight(), outputSizeH/srcImg.getHeight());
                 ofTranslate(-cropX, cropY);
@@ -255,24 +253,22 @@ void ofApp::draw(){
         drawCounter(161,174);
     ofPopMatrix();
     
-    
     if (showTextUI) {
+        int x = srcImg.getWidth()*srcImgScale*sceneScale + 10;
         // Draw text UI
-        ofDrawBitmapStringHighlight("Framerate : " + ofToString(ofGetFrameRate()), 10, 20);
-        ofDrawBitmapStringHighlight("Tracker thread framerate : " + ofToString(tracker.getThreadFps()), 10, 40);
+        ofDrawBitmapStringHighlight("Framerate : " + ofToString(ofGetFrameRate()), x, 20);
+        ofDrawBitmapStringHighlight("Tracker thread framerate : " + ofToString(tracker.getThreadFps()), x, 40);
         //
         if (!isIdle) {
-            if (!facesFound) ofDrawBitmapStringHighlight("Idle in: " + ofToString(timerSleep.getTimeLeftInSeconds()), 10, 80, ofColor(200,0,0), ofColor(255));
-            //
-            if (faceLocked) ofDrawBitmapStringHighlight("LOCKED - Face label: " + ofToString(faceLockedLabel), 10, 100, ofColor(150,0,0), ofColor(255));
-            //
+            if (!facesFound) ofDrawBitmapStringHighlight("Idle in: " + ofToString(timerSleep.getTimeLeftInSeconds()), x, 60, ofColor(200,0,0), ofColor(255));
+            if (faceLocked) ofDrawBitmapStringHighlight("LOCKED - Face label: " + ofToString(faceLockedLabel), x, 80, ofColor(150,0,0), ofColor(255));
             if (lockedFaceFound) {
                 string grid = (showGrid) ? "GRID" : "Time to Grid: " + ofToString(timerShowGrid.getTimeLeftInSeconds());
-                ofDrawBitmapStringHighlight(grid, 10, 120, ofColor(100,0,0), ofColor(255));
+                ofDrawBitmapStringHighlight(grid, x, 100, ofColor(100,0,0), ofColor(255));
             }
         } else {
             string idle = (!facesFound) ? "IDLE" : "IDLE - Wake in: " + ofToString(timerWake.getTimeLeftInSeconds());
-            ofDrawBitmapStringHighlight(idle, 10, 80, ofColor(200,0,0), ofColor(255));
+            ofDrawBitmapStringHighlight(idle, x, 60, ofColor(200,0,0), ofColor(255));
         }
     }
 
@@ -316,7 +312,7 @@ void ofApp::keyPressed(int key){
 //--------------------------------------------------------------
 void ofApp::initVar(){
     // general
-    isIdle = false, facesFound = false, lockedFaceFound = false,  faceLocked = false, showGrid = false, showText = false;
+    isIdle = false, facesFound = false, lockedFaceFound = false,  faceLocked = false, showGrid = false, showText = false, showTextUI = true;
     outputPositionX = 0, outputPositionY = 0, outputSizeW = 192, outputSizeH = 192, sceneScale = .5;
     colorDark = ofColor(100,0,0,230), colorBright = ofColor::crimson;
     
@@ -324,20 +320,20 @@ void ofApp::initVar(){
     srcImgScale = 1;
     
     // timers
-    timeToSleep = 2000; // time before entering idle mode
+    timeToSleep = 6000; // time before entering idle mode
     timeToWake = 2000; // time before exiting idle mode
     timeToLock = 2000, // Time before locking up a face
     timeToShowGrid = 2000; // time before grid
-    timeToShowText = 8000; // time before showing the text
+    timeToShowText = 6000; // time before showing the text
     timeToShowNextText = 5000; // time before showing the next bunch of text
 
     // tracker
-    trackerFaceDetectorImageSize = 2000000, trackerLandmarkDetectorImageSize = 2000000;
-    secondToAgeCoef = 70, ageToLock = timeToLock / secondToAgeCoef;
+    trackerFaceDetectorImageSize = 20000000, trackerLandmarkDetectorImageSize = 20000000;
+    secondToAgeCoef = 140, ageToLock = timeToLock / secondToAgeCoef;
     trackerIsThreaded = true;
     //
-    faceImgSize = 256, desiredLeftEyeX = 0.39, desiredLeftEyeY = 0.43, faceScaleRatio = 2.6;
-    faceRotate = true, faceConstrain = true;
+    faceImgSize = 256, desiredLeftEyeX = 0.39, desiredLeftEyeY = 0.43, faceScaleRatio = 2.1;
+    faceRotate = true, faceConstrain = false;
 
     // filter
     filterClaheClipLimit = 6;
@@ -378,7 +374,7 @@ void ofApp::randomizeSettings(){
     if (mixElements) elementsID = int(ofRandom(5));
     if (ofRandom(1)>.5) offsetElements = !offsetElements;
     // Video Playback
-    videosCount = pow(int(ofRandom(1,12)),2);
+    videosCount = pow(int(ofRandom(1,9)),2);
     // face
 }
 
@@ -427,7 +423,7 @@ void ofApp::drawGui(){
         //
         ImGui::Text("Lock");
         if (ImGui::SliderInt("Lock", &timeToLock, 1000, 20000, "%.0f ms")) ageToLock = timeToLock / secondToAgeCoef;
-        if (ImGui::SliderInt("Coef", &secondToAgeCoef, 10, 120)) ageToLock = timeToLock / secondToAgeCoef;
+        if (ImGui::SliderInt("Coef", &secondToAgeCoef, 10, 200)) ageToLock = timeToLock / secondToAgeCoef;
         ImGui::NextColumn();
         //
         ImGui::Text("Other");
@@ -510,6 +506,8 @@ void ofApp::initTracker() {
     tracker.setFaceDetectorImageSize(trackerFaceDetectorImageSize);
     tracker.setLandmarkDetectorImageSize(trackerLandmarkDetectorImageSize);
     tracker.setThreaded(trackerIsThreaded);
+    tracker.faceRectanglesTracker.setMaximumDistance(150);
+    tracker.faceRectanglesTracker.setPersistence(20);
 }
 
 
@@ -526,7 +524,7 @@ void ofApp::timerSleepFinished(ofEventArgs &e) {
     // Stop Timer
     timerSleep.stopTimer();
     // Add the wake time to the age to lock
-    ageToLock = timeToLock/secondToAgeCoef + timeToWake/secondToAgeCoef;
+    ageToLock = (timeToLock + timeToWake ) / secondToAgeCoef;
     // Start Videos
     loadVideos();
     playVideos();
