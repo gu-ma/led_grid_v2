@@ -3,15 +3,17 @@
 // CORE
 //--------------------------------------------------------------
 void ofApp::setup(){
-//    ofSetLogLevel(OF_LOG_VERBOSE);
+    ofSetLogLevel(OF_LOG_VERBOSE);
     ofSetFullscreen(true);
     ofSetBackgroundColor(0);
     #ifdef _USE_LIVE_VIDEO
-//        grabber.setup(1920, 1080);
-//        grabber.setup(1024, 768);
-        blackCam.setup(1920, 1080, 30);
+        #ifdef _USE_BLACKMAGIC
+            blackCam.setup(1920, 1080, 30);
+        #else
+            cam.setDeviceID(0); cam.setup(1920, 1080);
+        #endif
     #else
-        video.load("vids/motinas_multi_face_fast.mp4"); video.play();
+        video.load("vids/motinas_multi_face_frontal.mp4"); video.play();
     #endif
     initVar();
     loadTextFile();
@@ -36,8 +38,11 @@ void ofApp::update(){
     // update image
     newFrame = false;
     #ifdef _USE_LIVE_VIDEO
-//        grabber.update(); newFrame = grabber.isFrameNew();
-        newFrame = blackCam.update();
+        #ifdef _USE_BLACKMAGIC
+            newFrame = blackCam.update();
+        #else
+            cam.update(); newFrame = cam.isFrameNew();
+        #endif
     #else
         video.update(); newFrame = video.isFrameNew();
     #endif
@@ -46,16 +51,23 @@ void ofApp::update(){
         
         // capture
         #ifdef _USE_LIVE_VIDEO
-//            srcImg.setFromPixels(grabber.getPixels());
-            srcImg.setFromPixels(blackCam.getGrayPixels());
+            #ifdef _USE_BLACKMAGIC
+//                srcImg.setFromPixels(blackCam.getGrayPixels());
+                ofTexture t = ofTexture(blackCam.getGrayTexture());
+                ofPixels p;
+                t.readToPixels(p);
+                srcImg.setFromPixels(p);
+            #else
+                srcImg.setFromPixels(cam.getPixels());
+            #endif
         #else
             srcImg.setFromPixels(video.getPixels());
         #endif
         
         // Resize, mirror, crop, filter
         srcImg.resize(srcImg.getWidth()*srcImgScale, srcImg.getHeight()*srcImgScale);
+        if (srcImgIsCropped) srcImg.crop((srcImg.getWidth()-srcImg.getHeight())/2, 0, srcImg.getHeight(), srcImg.getHeight());
         srcImg.mirror(false, true);
-//        if (srcImgIsCropped) srcImg.crop((srcImg.getWidth()-srcImg.getHeight())/2, 0, srcImg.getHeight(), srcImg.getHeight());
         if (srcImgIsFiltered) clahe.filter(srcImg, srcImg, filterClaheClipLimit, srcImgIsColored);
         srcImg.update();
         
@@ -104,7 +116,7 @@ void ofApp::update(){
             // Get aligned face
             ofImage img = faceUtils.getAlignedFace(srcImg, instance, faceImgSize, desiredLeftEyeX, desiredLeftEyeY, faceScaleRatio, faceRotate, faceConstrain);
             // save to agedImages vector
-            if ( img.isAllocated() ) agedImages.push_back(IndexedImages(instance.getLabel(),img));
+            agedImages.push_back(IndexedImages(instance.getLabel(),img));
             
             // if the instance is the face locked and it's visible
             if ( img.isAllocated() && instance.getLabel()==faceLockedLabel) {
@@ -112,6 +124,8 @@ void ofApp::update(){
                 faceLockedX = instance.getBoundingBox().getX(), faceLockedY = instance.getBoundingBox().getY();
                 // add image to vid recorder
                 if (vidRecorder.isInitialized()) vidRecorder.addFrame(img.getPixels());
+                //
+                cout << tracker.faceRectanglesTracker.getVelocity(0) << endl;
                 // update averages values
                 faceUtils.updateLandmarksAverage(instance);
                 // Push elements to the grid
@@ -158,7 +172,6 @@ void ofApp::update(){
             // set age to Lock to default
             ageToLock = timeToLock / secondToAgeCoef;
         }
-        
         // If the face locked does not exist anymore
         if ( !tracker.faceRectanglesTracker.existsCurrent(faceLockedLabel) ) {
             faceLocked = false;
@@ -198,6 +211,7 @@ void ofApp::draw(){
     
     // Draw source image + tracker
     ofPushMatrix();
+        ofTranslate(0,outputSizeH);
         ofScale(1/srcImgScale*sceneScale, 1/srcImgScale*sceneScale);
         srcImg.draw(0, 0);
         // Draw tracker landmarks
@@ -230,9 +244,9 @@ void ofApp::draw(){
         // srcImg + tracker if no faces are locked
         else if (!lockedFaceFound) {
             // Draw srcImg
-            int cropW = (srcImgIsCropped) ? srcImg.getHeight() : srcImg.getWidth();
+            int cropW = srcImg.getHeight();
             int cropH = srcImg.getHeight();
-            int cropX = (faceLocked && srcImgIsCropped) ? ofClamp(int(faceLockedX/640)*640, 0, srcImg.getWidth()-cropW) : (srcImg.getWidth()-srcImg.getHeight())/2;
+            int cropX = (srcImgIsCropped) ? (srcImg.getWidth()-srcImg.getHeight())/2 : ofClamp(int(faceLockedX/640)*640, 0, srcImg.getWidth()-cropW);
             int cropY = 0;
             srcImg.drawSubsection(0, 0, outputSizeW, outputSizeH, cropX, cropY, cropW, cropH);
             ofPushMatrix();
@@ -240,21 +254,25 @@ void ofApp::draw(){
                 ofTranslate(-cropX, cropY);
                 tracker.drawDebug();
             ofPopMatrix();
-        } else alignedFace.draw(0, 0, outputSizeW, outputSizeW);
+        } else alignedFace.draw(0, 0, outputSizeW, outputSizeH);
         // Grid
         if (showGrid) grid.draw(0,0);
         // Text
         if (showText) {
-            int padding = 4, s = 32, w = s*2;
-            if (textContentIndex==0) drawTextFrame(textDisplay[0], textContent[0], s*2, 0, s*2, s*2, padding);
-            if (textContentIndex==1) drawTextFrame(textDisplay[0], textContent[1], s, s*3, s*2, s*2, padding);
-            if (textContentIndex==2) drawTextFrame(textDisplay[0], textContent[2], s*4, s*4, s*2, s*2, padding);
+            int padding = 2*textScale, w = 32*textScale;
+            drawTextFrame(textFont, textContent[textContentIndex], textX, textY, w, w, padding);
+            
+//            int padding = 4, s = 32, w = s*2;
+//            if (textContentIndex==0) drawTextFrame(textFont, textContent[0], s*2, 0, w, w, padding);
+//            if (textContentIndex==1) drawTextFrame(textFont, textContent[1], s, s*3, w, w, padding);
+//            if (textContentIndex==2) drawTextFrame(textFont, textContent[2], s*4, s*4, w, w, padding);
         }
         drawCounter(161,174);
     ofPopMatrix();
     
     if (showTextUI) {
-        int x = srcImg.getWidth()*srcImgScale*sceneScale + 10;
+//        int x = srcImg.getWidth()*srcImgScale*sceneScale + 20;
+        int x = outputSizeW + 20;
         // Draw text UI
         ofDrawBitmapStringHighlight("Framerate : " + ofToString(ofGetFrameRate()), x, 20);
         ofDrawBitmapStringHighlight("Tracker thread framerate : " + ofToString(tracker.getThreadFps()), x, 40);
@@ -317,7 +335,7 @@ void ofApp::initVar(){
     colorDark = ofColor(100,0,0,230), colorBright = ofColor::crimson;
     
     // capture
-    srcImgScale = 1;
+    srcImgScale = .66666666666;
     
     // timers
     timeToSleep = 6000; // time before entering idle mode
@@ -330,7 +348,7 @@ void ofApp::initVar(){
     // tracker
     trackerFaceDetectorImageSize = 20000000, trackerLandmarkDetectorImageSize = 20000000;
     secondToAgeCoef = 140, ageToLock = timeToLock / secondToAgeCoef;
-    trackerIsThreaded = true;
+    trackerIsThreaded = false;
     //
     faceImgSize = 256, desiredLeftEyeX = 0.39, desiredLeftEyeY = 0.43, faceScaleRatio = 2.1;
     faceRotate = true, faceConstrain = false;
@@ -346,14 +364,14 @@ void ofApp::initVar(){
     showGrid = false, showGridElements = false, gridIsSquare = true;
     gridWidth = 24, gridHeight = 24, gridRes = 16, gridMinSize = 0, gridMaxSize = 12;
     mixElements = false, offsetElements = false, elementsID = 0;
+    
     // text
     textContent.resize(3);
-    textDisplay.resize(3);
-    for (auto & t : textDisplay) {
-        t.load("fonts/pixelmix.ttf", 6, false, false, false, 144);
-        t.setLineHeight(10);
-    }
+    textFont.load("fonts/pixelmix.ttf", 6, false, false, false, 144);
+    textFont.setLineHeight(10);
     textFileIndex = 0, textContentIndex = 0;
+    textScale = 2, textX = 0, textY = 0;
+
     
     // live
     volumes.assign(5,0), initTimesVolumes.assign(5,0), startVolumes.assign(5,0), endVolumes.assign(5,0);
@@ -366,15 +384,19 @@ void ofApp::initVar(){
 //--------------------------------------------------------------
 void ofApp::randomizeSettings(){
     // grid
-    if (ofRandom(1)>.4) gridWidth = 6, gridHeight = 6, gridRes = 32, gridMaxSize = ofRandom(6);
-    else gridWidth = 12, gridHeight = 12, gridRes = 16, gridMaxSize = ofRandom(12);
+    float a = ofRandom(1);
+    if (a<.2) gridWidth = 24, gridHeight = 24, gridRes = 8, gridMaxSize = ofRandom(24);
+    else if (a<.4) gridWidth = 12, gridHeight = 12, gridRes = 16, gridMaxSize = ofRandom(12);
+    else gridWidth = 6, gridHeight = 6, gridRes = 32, gridMaxSize = ofRandom(6);
     gridIsSquare = (ofRandom(1)>.5) ? true : false;
     // grid content
     if (ofRandom(1)>.5) mixElements = !mixElements;
     if (mixElements) elementsID = int(ofRandom(5));
     if (ofRandom(1)>.5) offsetElements = !offsetElements;
     // Video Playback
-    videosCount = pow(int(ofRandom(1,9)),2);
+    vector<int> s = {1, 2, 3, 6, 12};
+    int r = s[(int)ofRandom(0,s.size())];
+    videosCount = pow(r,2);
     // face
 }
 
@@ -429,7 +451,6 @@ void ofApp::drawGui(){
         ImGui::Text("Other");
         if (ImGui::SliderInt("Grid", &timeToShowGrid, 1000, 20000, "%.0f ms")) timerShowGrid.setTimer(timeToShowGrid);
         if (ImGui::SliderInt("Text", &timeToShowText, 1000, 20000, "%.0f ms")) timerShowText.setTimer(timeToShowText);
-        ImGui::SliderInt("Text", &timeToShowNextText, 1000, 20000, "%.0f ms");
         //
         ImGui::Columns(1); 
         ImGui::Separator();
@@ -569,12 +590,21 @@ void ofApp::timerShowTextFinished(ofEventArgs &e) {
         cout << "SPEECH: " + ofToString(textContentIndex) + " " + msg << endl;
     }
     
-    // increment counters
+    // increment indexes
     textFileIndex = (textFileIndex+1)%textFileLines.size();
     textContentIndex = (textContentIndex+1)%textContent.size();
     
     // clear current text
     textContent.at(textContentIndex).clear();
+    
+    //
+    textScale = ofRandom(2, 7);
+    textX = (int)ofRandom(0, 7-textScale) * 32;
+    textY = (int)ofRandom(0, 7-textScale) * 32;
+    
+    // loadfont 6 => 64
+    textFont.load("fonts/pixelmix.ttf", 3*textScale, false, false, false, 144);
+    textFont.setLineHeight(5*textScale);
 
     // restart timer
     float t = (textContentIndex == 0) ? ofRandom(timeToShowText, timeToShowText*2) : timeToShowNextText+ofRandom(timeToShowNextText/2);
@@ -605,10 +635,12 @@ void ofApp::loadTextFile() {
 //--------------------------------------------------------------
 void ofApp::drawTextFrame(const ofTrueTypeFont &txtFont, string &txt, const int &x, const int &y, const int &w, const int &h, const int &padding) {
     ofPushStyle();
-        ofSetColor(colorDark);
+//        ofSetColor(colorDark);
+//        ofDrawRectangle(x, y, w, h);
+        ofSetColor(0,180);
         ofDrawRectangle(x, y, w, h);
         ofSetColor(255);
-        txtFont.drawString(utils.wrapString(txt, w-padding*2, txtFont), x+padding, y+padding+4*2);
+        txtFont.drawString(utils.wrapString(txt, w-padding*2, txtFont), x+padding, y+padding+txtFont.getSize()+2);
     ofPopStyle();
 }
 

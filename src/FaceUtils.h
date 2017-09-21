@@ -76,6 +76,7 @@ public:
         
         int x = rect.x;
         int y = rect.y;
+        
         // if scaled rect outside of img boundaries
         if ( x < 0 || x > srcImg.getWidth()-rect.width || y < 0 || y > srcImg.getHeight()-rect.height ) {
             // clamp x, y to img size
@@ -128,6 +129,7 @@ public:
         img.resize(desiredFaceWidth, desiredFaceHeight);
         if ( !constrain ) return img;
         else if ( !outOfBound ) return img;
+        
     }
     
     

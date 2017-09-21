@@ -19,6 +19,8 @@
 #include "MiscUtils.h"
 
 #define _USE_LIVE_VIDEO
+#define _USE_BLACKMAGIC
+
 
 class ofApp : public ofBaseApp{
     
@@ -108,13 +110,13 @@ public:
     ofxBlackMagic blackCam;
     
     //Text
-    vector<ofTrueTypeFont> textDisplay;
-    vector<string> textFileLines;
-    vector<string> textContent;
+    ofTrueTypeFont textFont;
+    vector<string> textFileLines, textContent;
     int textFileIndex, textContentIndex;
     MiscUtils utils;
     void loadTextFile();
     void drawTextFrame(const ofTrueTypeFont &txtFont, string &txt, const int &x, const int &y, const int &w, const int &h, const int &padding);
+    int textScale, textX, textY;
 
     // TTS
     LogAudio log;
