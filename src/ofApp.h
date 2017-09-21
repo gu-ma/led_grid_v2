@@ -33,7 +33,7 @@ public:
     
     // General
     void initVar();
-    bool isIdle, facesFound, faceLocked, lockedFaceFound, showGrid, showText, newFrame, fullScreen, showTextUI;
+    bool isIdle, facesFound, faceLocked, lockedFaceFound, showGrid, showText, newFrame, fullScreen, showTextUI, showTracker;
     int outputPositionX, outputPositionY, outputSizeW, outputSizeH;
     float sceneScale;
     void randomizeSettings();

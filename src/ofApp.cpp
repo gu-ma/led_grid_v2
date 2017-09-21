@@ -6,6 +6,8 @@ void ofApp::setup(){
     ofSetLogLevel(OF_LOG_VERBOSE);
     ofSetFullscreen(true);
     ofSetBackgroundColor(0);
+    ofTrueTypeFont::setGlobalDpi(72);
+    
     #ifdef _USE_LIVE_VIDEO
         #ifdef _USE_BLACKMAGIC
             blackCam.setup(1920, 1080, 30);
@@ -231,12 +233,6 @@ void ofApp::draw(){
     ofPopMatrix();
     
     // Draw Output
-    // rectangular marker
-    ofPushStyle();
-        ofSetColor(colorDark);
-        ofDrawRectangle(outputPositionX-2, outputPositionY-2, outputSizeW+4, outputSizeH+4);
-    ofPopStyle();
-    
     ofPushMatrix();
         ofTranslate(outputPositionX, outputPositionY);
         // Draw the videos if idle
@@ -261,7 +257,6 @@ void ofApp::draw(){
         if (showText) {
             int padding = 2*textScale, w = 32*textScale;
             drawTextFrame(textFont, textContent[textContentIndex], textX, textY, w, w, padding);
-            
 //            int padding = 4, s = 32, w = s*2;
 //            if (textContentIndex==0) drawTextFrame(textFont, textContent[0], s*2, 0, w, w, padding);
 //            if (textContentIndex==1) drawTextFrame(textFont, textContent[1], s, s*3, w, w, padding);
@@ -367,7 +362,7 @@ void ofApp::initVar(){
     
     // text
     textContent.resize(3);
-    textFont.load("fonts/pixelmix.ttf", 6, false, false, false, 144);
+    textFont.load("fonts/Verdana.ttf", 12, false);
     textFont.setLineHeight(10);
     textFileIndex = 0, textContentIndex = 0;
     textScale = 2, textX = 0, textY = 0;
@@ -598,13 +593,15 @@ void ofApp::timerShowTextFinished(ofEventArgs &e) {
     textContent.at(textContentIndex).clear();
     
     //
-    textScale = ofRandom(2, 7);
+    textScale = ofRandom(3, 7);
     textX = (int)ofRandom(0, 7-textScale) * 32;
     textY = (int)ofRandom(0, 7-textScale) * 32;
     
     // loadfont 6 => 64
-    textFont.load("fonts/pixelmix.ttf", 3*textScale, false, false, false, 144);
+    textFont.load("fonts/Verdana.ttf", 4*textScale, false);
     textFont.setLineHeight(5*textScale);
+    textFont.setLetterSpacing(1.015);
+
 
     // restart timer
     float t = (textContentIndex == 0) ? ofRandom(timeToShowText, timeToShowText*2) : timeToShowNextText+ofRandom(timeToShowNextText/2);
@@ -637,10 +634,10 @@ void ofApp::drawTextFrame(const ofTrueTypeFont &txtFont, string &txt, const int 
     ofPushStyle();
 //        ofSetColor(colorDark);
 //        ofDrawRectangle(x, y, w, h);
-        ofSetColor(0,180);
+        ofSetColor(0,230);
         ofDrawRectangle(x, y, w, h);
         ofSetColor(255);
-        txtFont.drawString(utils.wrapString(txt, w-padding*2, txtFont), x+padding, y+padding+txtFont.getSize()+2);
+        txtFont.drawString(utils.wrapString(txt, w-padding*2, txtFont), x+padding, y+padding+txtFont.getSize()*.6);
     ofPopStyle();
 }
 
@@ -651,9 +648,9 @@ void ofApp::drawCounter(const int &x, const int &y) {
         ofPushMatrix();
             ofTranslate(x, y);
             ofSetColor(colorBright);
-            ofDrawCircle(6, 5, 1);
-            ofDrawCircle(12, 5, 1);
-            ofDrawRectangle(5, 10, 8, 1);
+//            ofDrawCircle(6, 5, 1);
+//            ofDrawCircle(12, 5, 1);
+//            ofDrawRectangle(5, 10, 8, 1);
             ofDrawBitmapString(ofToString(tracker.size()), 18, 12);
         ofPopStyle();
     ofPopMatrix();
@@ -716,7 +713,7 @@ void ofApp::initLive(){
         live.setVolume(0.8);
         live.stop();
         live.play();
-        live.setTempo(45);
+        live.setTempo(60);
         
     }
 }
@@ -744,18 +741,18 @@ void ofApp::refreshLive() {
 
 //--------------------------------------------------------------
 void ofApp::liveVolumeUp() {
-    initTimesVolumes[0] = ofGetElapsedTimef(), startVolumes[0] = .1, endVolumes[0] = .5;
-    initTimesVolumes[1] = ofGetElapsedTimef(), startVolumes[1] = .1, endVolumes[1] = .4;
-    initTimesVolumes[2] = ofGetElapsedTimef(), startVolumes[2] = .2, endVolumes[2] = .4;
-    initTimesVolumes[3] = ofGetElapsedTimef(), startVolumes[3] = .2, endVolumes[3] = .7;
-    initTimesVolumes[4] = ofGetElapsedTimef(), startVolumes[4] = .2, endVolumes[4] = .7;
+    initTimesVolumes[0] = ofGetElapsedTimef(), startVolumes[0] = .4, endVolumes[0] = .9;
+    initTimesVolumes[1] = ofGetElapsedTimef(), startVolumes[1] = .3, endVolumes[1] = .6;
+    initTimesVolumes[2] = ofGetElapsedTimef(), startVolumes[2] = .3, endVolumes[2] = .6;
+    initTimesVolumes[3] = ofGetElapsedTimef(), startVolumes[3] = .4, endVolumes[3] = .6;
+    initTimesVolumes[4] = ofGetElapsedTimef(), startVolumes[4] = .3, endVolumes[4] = .8;
 }
 
 //--------------------------------------------------------------
 void ofApp::liveVolumeDown() {
-    initTimesVolumes[0] = ofGetElapsedTimef(), startVolumes[0] = .5, endVolumes[0] = .3;
-    initTimesVolumes[1] = ofGetElapsedTimef(), startVolumes[1] = .4, endVolumes[1] = .1;
-    initTimesVolumes[2] = ofGetElapsedTimef(), startVolumes[2] = .4, endVolumes[2] = .4;
-    initTimesVolumes[3] = ofGetElapsedTimef(), startVolumes[3] = .7, endVolumes[3] = .4;
-    initTimesVolumes[4] = ofGetElapsedTimef(), startVolumes[4] = .7, endVolumes[4] = .4;
+    initTimesVolumes[0] = ofGetElapsedTimef(), startVolumes[0] = .9, endVolumes[0] = .4;
+    initTimesVolumes[1] = ofGetElapsedTimef(), startVolumes[1] = .6, endVolumes[1] = .3;
+    initTimesVolumes[2] = ofGetElapsedTimef(), startVolumes[2] = .6, endVolumes[2] = .3;
+    initTimesVolumes[3] = ofGetElapsedTimef(), startVolumes[3] = .6, endVolumes[3] = .4;
+    initTimesVolumes[4] = ofGetElapsedTimef(), startVolumes[4] = .8, endVolumes[4] = .3;
 }
