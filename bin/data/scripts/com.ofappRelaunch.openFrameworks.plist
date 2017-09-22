@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">  
+<dict>  
+    <key>KeepAlive</key>  
+    <dict>  
+        <key>SuccessfulExit</key>  
+        <false/>  
+    </dict>  
+    <key>Label</key>  
+    <string>com.ofappRelaunch.openFrameworks</string>  
+    <key>ProgramArguments</key>  
+    <array>  
+        <string>/Users/ausleihe/Documents/00-App/of_v0.9.8_osx_release/apps/myApps/SF2017_test/SF2017_test.app/Contents/MacOS/myApp</string>  
+    </array>  
+</dict>  
+</plist>
