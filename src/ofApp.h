@@ -20,7 +20,7 @@
 #include "MiscUtils.h"
 
 #define _USE_LIVE_VIDEO
-#define _USE_BLACKMAGIC
+//#define _USE_BLACKMAGIC
 
 
 class ofApp : public ofBaseApp{
@@ -42,9 +42,12 @@ public:
     int displayPositionX, displayPositionY, displaySizeW, displaySizeH;
     bool glitchOn;
     int fx1, fx2;
-    float sceneScale, noiseOfTime, noiseFreq;
-    void glitchStart(), glitchStop();
+    float sceneScale;
     void randomizeSettings();
+    // Glitch
+    float noiseOfTime, noiseFreq;
+    void glitchStart(), glitchStop();
+    void changeGlitchState(int id, bool state);
     
     // Draw
     void drawCounter(const int &x, const int &y);

@@ -44,6 +44,21 @@ void ofApp::update(){
     
     //
     noiseOfTime = ofSignedNoise(ofGetElapsedTimef()/noiseFreq,0);
+    if (int(ofGetElapsedTimef())%2 == 0) {
+        if (!glitchOn) {
+            if (ofRandom(0, abs(noiseOfTime))>.5) {
+                cout << "Glitch: start" << endl;
+                glitchStart();
+                glitchOn = true;
+            }
+        } else {
+            if (ofRandom(0, abs(noiseOfTime))>.5) {
+                cout << "Glitch: stop" << endl;
+                glitchStop();
+                glitchOn = false;
+            }
+        }
+    }
 //    if (ofRandom(.5,1)<abs(noiseOfTime)) {
 //        // start glitch
 //        glitchOn = true;
@@ -809,20 +824,46 @@ void ofApp::liveVolumeDown() {
 
 
 // GLITCH
-//void ofApp::glitchStart(int fxID){
-//    if (fxID == '1') glitch.setFx(OFXPOSTGLITCH_CR_HIGHCONTRAST  , true);
-//    if (fxID == '2') glitch.setFx(OFXPOSTGLITCH_SHAKER           , true);
-//    if (fxID == '3') glitch.setFx(OFXPOSTGLITCH_CUTSLIDER		, true);
-//    if (fxID == '4') glitch.setFx(OFXPOSTGLITCH_NOISE			, true);
-//    if (fxID == '5') glitch.setFx(OFXPOSTGLITCH_SLITSCAN         , true);
-//    if (fxID == '6') glitch.setFx(OFXPOSTGLITCH_INVERT			, true);
-//}
-//
-//void ofApp::glitchStop() {
-//    if (fxID == '1') glitch.setFx(OFXPOSTGLITCH_CR_HIGHCONTRAST  , false);
-//    if (fxID == '2') glitch.setFx(OFXPOSTGLITCH_SHAKER           , false);
-//    if (fxID == '3') glitch.setFx(OFXPOSTGLITCH_CUTSLIDER		, false);
-//    if (fxID == '4') glitch.setFx(OFXPOSTGLITCH_NOISE			, false);
-//    if (fxID == '5') glitch.setFx(OFXPOSTGLITCH_SLITSCAN         , false);
-//    if (fxID == '6') glitch.setFx(OFXPOSTGLITCH_INVERT			, false);
-//}
+//--------------------------------------------------------------
+void ofApp::glitchStart(){
+    changeGlitchState(ofRandom(1,7), true);
+    if (ofRandomuf()>.5) {
+        changeGlitchState(ofRandom(1,7), true);
+        if (ofRandomuf()>.5) {
+            changeGlitchState(ofRandom(1,7), true);
+        };
+    };
+}
+
+//--------------------------------------------------------------
+void ofApp::glitchStop() {
+    for (int i=1; i<=6; i++) {
+        changeGlitchState(i, false);
+    }
+}
+
+//--------------------------------------------------------------
+void ofApp::changeGlitchState(int id, bool state) {
+    switch (id) {
+        case 1:
+            glitch.setFx(OFXPOSTGLITCH_CR_HIGHCONTRAST, state);
+            break;
+        case 2:
+            glitch.setFx(OFXPOSTGLITCH_SHAKER, state);
+            break;
+        case 3:
+            glitch.setFx(OFXPOSTGLITCH_CUTSLIDER, state);
+            break;
+        case 4:
+            glitch.setFx(OFXPOSTGLITCH_NOISE, state);
+            break;
+        case 5:
+            glitch.setFx(OFXPOSTGLITCH_SLITSCAN, state);
+            break;
+        case 6:
+            glitch.setFx(OFXPOSTGLITCH_INVERT, state);
+            break;
+        default:
+            break;
+    }
+}
