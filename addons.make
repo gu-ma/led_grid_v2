@@ -7,5 +7,6 @@ ofxHAPAVPlayer
 ofxImGui
 ofxOpenCv
 ofxOsc
+ofxPostGlitch
 ofxTimer
 ofxVideoRecorder

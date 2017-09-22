@@ -4,11 +4,10 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
 //    ofSetLogLevel(OF_LOG_VERBOSE);
+    //
     ofSetFullscreen(true);
     ofSetBackgroundColor(0);
     ofTrueTypeFont::setGlobalDpi(72);
-    
-    fbo.allocate(ofGetWidth(), ofGetHeight());
     
     #ifdef _USE_LIVE_VIDEO
         #ifdef _USE_BLACKMAGIC
@@ -27,6 +26,12 @@ void ofApp::setup(){
     initTimers();
     live.setup();
     initLive();
+    //
+    displayFbo.allocate(displaySizeW, displaySizeH);
+    guiFbo.allocate(ofGetWidth(), ofGetHeight());
+    glitch.setup(&displayFbo);
+
+
 
 }
 
@@ -205,93 +210,94 @@ void ofApp::update(){
         textContent.at(textContentIndex).append(log.getCurrentWord() + " ");
     }
     
-    // FBO
+    // FBOs
     ofImage alignedFace;
-    fbo.begin();
-    ofBackground(0);
-    ofPushMatrix();
-    ofTranslate(0,outputSizeH);
-    ofScale(1/srcImgScale*sceneScale, 1/srcImgScale*sceneScale);
-    // Draw source image + tracker
-    if (showTracker) {
-        srcImg.draw(0, 0);
-        // Draw tracker landmarks
-        tracker.drawDebug();
-    }
-    // Draw Faces
-    for(int i=0; i<agedImages.size(); i++) {
-        agedImages[i].second.draw(i*faceImgSize, (showTracker) ? srcImg.getHeight() : 0);
-        if (agedImages[i].first == faceLockedLabel) {
-            ofPushStyle();
-            ofNoFill();
-            ofSetColor(colorBright);
-            ofDrawRectangle(i*faceImgSize, (showTracker) ? srcImg.getHeight() : 0, faceImgSize, faceImgSize);
-            ofPopStyle();
-            alignedFace = agedImages[i].second;
-        }
-    }
-    ofPopMatrix();
-    
-    // Draw Output
-    ofPushMatrix();
-    ofTranslate(outputPositionX, outputPositionY);
-    // Draw the videos if idle
-    if (isIdle) drawVideos();
-    // srcImg + tracker if no faces are locked
-    else if (!lockedFaceFound) {
-        // Draw srcImg
-        int s = srcImg.getHeight();
-        int cropW = s, cropH = s;
-        int cropX = (srcImgIsCropped) ? (srcImg.getWidth()-srcImg.getHeight())/2 : ofClamp(int(faceLockedX/s)*s, 0, srcImg.getWidth()-cropW);
-        int cropY = 0;
-        srcImg.drawSubsection(0, 0, outputSizeW, outputSizeH, cropX, cropY, cropW, cropH);
+    // Gui outputs
+    guiFbo.begin();
+        ofBackground(0);
         ofPushMatrix();
-        ofScale(outputSizeW/srcImg.getHeight(), outputSizeH/srcImg.getHeight());
-        ofTranslate(-cropX, cropY);
-        tracker.drawDebug();
-        ofPopMatrix();
-    } else alignedFace.draw(0, 0, outputSizeW, outputSizeH);
-    // Grid
-    if (showGrid) grid.draw(0,0);
-    // Text
-    if (showText) {
-        int padding = 3*textScale, w = 32*textScale;
-        drawTextFrame(textFont, textContent[textContentIndex], textX, textY, w, w, padding);
-        //            int padding = 4, s = 32, w = s*2;
-        //            if (textContentIndex==0) drawTextFrame(textFont, textContent[0], s*2, 0, w, w, padding);
-        //            if (textContentIndex==1) drawTextFrame(textFont, textContent[1], s, s*3, w, w, padding);
-        //            if (textContentIndex==2) drawTextFrame(textFont, textContent[2], s*4, s*4, w, w, padding);
-    }
-    drawCounter(161,174);
-    ofPopMatrix();
-    
-    if (showTextUI) {
-        //        int x = srcImg.getWidth()*srcImgScale*sceneScale + 20;
-        int x = outputSizeW + 20;
-        // Draw text UI
-        ofDrawBitmapStringHighlight("Framerate : " + ofToString(ofGetFrameRate()), x, 20);
-        ofDrawBitmapStringHighlight("Tracker thread framerate : " + ofToString(tracker.getThreadFps()), x, 40);
-        //
-        if (!isIdle) {
-            if (!facesFound) ofDrawBitmapStringHighlight("Idle in: " + ofToString(timerSleep.getTimeLeftInSeconds()), x, 60, ofColor(200,0,0), ofColor(255));
-            if (faceLocked) ofDrawBitmapStringHighlight("LOCKED - Face label: " + ofToString(faceLockedLabel), x, 80, ofColor(150,0,0), ofColor(255));
-            if (lockedFaceFound) {
-                string grid = (showGrid) ? "GRID" : "Time to Grid: " + ofToString(timerShowGrid.getTimeLeftInSeconds());
-                ofDrawBitmapStringHighlight(grid, x, 100, ofColor(100,0,0), ofColor(255));
+            ofScale(1/srcImgScale*sceneScale, 1/srcImgScale*sceneScale);
+            // Draw source image + tracker
+            if (showTracker) {
+                srcImg.draw(0, 0);
+                // Draw tracker landmarks
+                tracker.drawDebug();
             }
-        } else {
-            string idle = (!facesFound) ? "IDLE" : "IDLE - Wake in: " + ofToString(timerWake.getTimeLeftInSeconds());
-            ofDrawBitmapStringHighlight(idle, x, 60, ofColor(200,0,0), ofColor(255));
+            // Draw Faces
+            for(int i=0; i<agedImages.size(); i++) {
+                agedImages[i].second.draw(i*faceImgSize, (showTracker) ? srcImg.getHeight() : 0);
+                if (agedImages[i].first == faceLockedLabel) {
+                    ofPushStyle();
+                        ofNoFill();
+                        ofSetColor(colorBright);
+                        ofDrawRectangle(i*faceImgSize, (showTracker) ? srcImg.getHeight() : 0, faceImgSize, faceImgSize);
+                    ofPopStyle();
+                    alignedFace = agedImages[i].second;
+                }
+            }
+        ofPopMatrix();
+        
+        if (showTextUI) {
+            //        int x = srcImg.getWidth()*srcImgScale*sceneScale + 20;
+            int x = displaySizeW + 20;
+            // Draw text UI
+            ofDrawBitmapStringHighlight("Framerate : " + ofToString(ofGetFrameRate()), x, 20);
+            ofDrawBitmapStringHighlight("Tracker thread framerate : " + ofToString(tracker.getThreadFps()), x, 40);
+            //
+            if (!isIdle) {
+                if (!facesFound) ofDrawBitmapStringHighlight("Idle in: " + ofToString(timerSleep.getTimeLeftInSeconds()), x, 60, ofColor(200,0,0), ofColor(255));
+                if (faceLocked) ofDrawBitmapStringHighlight("LOCKED - Face label: " + ofToString(faceLockedLabel), x, 80, ofColor(150,0,0), ofColor(255));
+                if (lockedFaceFound) {
+                    string grid = (showGrid) ? "GRID" : "Time to Grid: " + ofToString(timerShowGrid.getTimeLeftInSeconds());
+                    ofDrawBitmapStringHighlight(grid, x, 100, ofColor(100,0,0), ofColor(255));
+                }
+            } else {
+                string idle = (!facesFound) ? "IDLE" : "IDLE - Wake in: " + ofToString(timerWake.getTimeLeftInSeconds());
+                ofDrawBitmapStringHighlight(idle, x, 60, ofColor(200,0,0), ofColor(255));
+            }
         }
-    }
-    fbo.end();
+    guiFbo.end();
+    
+
+    // Display Output
+    displayFbo.begin();
+        // Draw the videos if idle
+        if (isIdle) drawVideos();
+        // srcImg + tracker if no faces are locked
+        else if (!lockedFaceFound) {
+            // Draw srcImg
+            int s = srcImg.getHeight();
+            int cropW = s, cropH = s;
+            int cropX = (srcImgIsCropped) ? (srcImg.getWidth()-srcImg.getHeight())/2 : ofClamp(int(faceLockedX/s)*s, 0, srcImg.getWidth()-cropW);
+            int cropY = 0;
+            srcImg.drawSubsection(0, 0, displaySizeW, displaySizeH, cropX, cropY, cropW, cropH);
+            ofPushMatrix();
+                ofScale(displaySizeW/srcImg.getHeight(), displaySizeH/srcImg.getHeight());
+                ofTranslate(-cropX, cropY);
+                tracker.drawDebug();
+            ofPopMatrix();
+        } else alignedFace.draw(0, 0, displaySizeW, displaySizeH);
+        // Grid
+        if (showGrid) grid.draw(0,0);
+        // Text
+        if (showText) {
+            int padding = 3*textScale, w = 32*textScale;
+            drawTextFrame(textFont, textContent[textContentIndex], textX, textY, w, w, padding);
+            //            int padding = 4, s = 32, w = s*2;
+            //            if (textContentIndex==0) drawTextFrame(textFont, textContent[0], s*2, 0, w, w, padding);
+            //            if (textContentIndex==1) drawTextFrame(textFont, textContent[1], s, s*3, w, w, padding);
+            //            if (textContentIndex==2) drawTextFrame(textFont, textContent[2], s*4, s*4, w, w, padding);
+        }
+        drawCounter(161,174);
+    displayFbo.end();
 }
 
 //--------------------------------------------------------------
 void ofApp::draw(){
-
-    fbo.draw(0,0);
-
+    
+    guiFbo.draw(0,displaySizeH);
+    glitch.generateFx();
+    displayFbo.draw(displayPositionX, displayPositionY);
     // Draw GUI
     if (showGUI) drawGui();
 }
@@ -317,8 +323,8 @@ void ofApp::keyPressed(int key){
         else ofSetFullscreen(false);
     }
     // Live
-    if (key == '0') initLive();
-    if (key == 'l') live.printAll();
+    if (key == 'z') initLive();
+    if (key == 'x') live.printAll();
     if (key == '.') {
         float v = live.getVolume();
         live.setVolume( ofClamp(v + 0.1, 0, 1) );
@@ -327,15 +333,32 @@ void ofApp::keyPressed(int key){
         float v = live.getVolume();
         live.setVolume( ofClamp(v - 0.1, 0, 1) );
     }
-    
+    // Glitch
+    if (key == '1') glitch.setFx(OFXPOSTGLITCH_CR_HIGHCONTRAST  , true);
+    if (key == '2') glitch.setFx(OFXPOSTGLITCH_SHAKER           , true);
+    if (key == '3') glitch.setFx(OFXPOSTGLITCH_CUTSLIDER		, true);
+    if (key == '4') glitch.setFx(OFXPOSTGLITCH_NOISE			, true);
+    if (key == '5') glitch.setFx(OFXPOSTGLITCH_SLITSCAN         , true);
+    if (key == '6') glitch.setFx(OFXPOSTGLITCH_INVERT			, true);
+}
+
+void ofApp::keyReleased(int key) {
+    // Glitch
+    if (key == '1') glitch.setFx(OFXPOSTGLITCH_CR_HIGHCONTRAST, false);
+    if (key == '2') glitch.setFx(OFXPOSTGLITCH_SHAKER			, false);
+    if (key == '3') glitch.setFx(OFXPOSTGLITCH_CUTSLIDER		, false);
+    if (key == '4') glitch.setFx(OFXPOSTGLITCH_NOISE			, false);
+    if (key == '5') glitch.setFx(OFXPOSTGLITCH_SLITSCAN         , false);
+    if (key == '6') glitch.setFx(OFXPOSTGLITCH_INVERT			, false);
 }
 
 // VAR
 //--------------------------------------------------------------
 void ofApp::initVar(){
     // general
-    isIdle = false, facesFound = false, lockedFaceFound = false,  faceLocked = false, showGrid = false, showText = false, showTextUI = true, showTracker = true, showGUI = true;
-    outputPositionX = 0, outputPositionY = 0, outputSizeW = 192, outputSizeH = 192, sceneScale = .5;
+    isIdle = false, facesFound = false, lockedFaceFound = false,  faceLocked = false;
+    showText = false, showTextUI = true, showTracker = true, showGUI = true;
+    displayPositionX = 0, displayPositionY = 0, displaySizeW = 192, displaySizeH = 192, sceneScale = .5;
     colorDark = ofColor(100,0,0,230), colorBright = ofColor::crimson;
     
     // capture
@@ -489,13 +512,13 @@ void ofApp::drawGui(){
         ImGui::Columns(2);
         //
         ImGui::Text("Position");
-        ImGui::DragInt("X", &outputPositionX, 1, 0, ofGetWindowWidth(), "%.0f ms");
-        ImGui::DragInt("Y", &outputPositionY, 1, 0, ofGetWindowHeight(), "%.0f ms");
+        ImGui::DragInt("X", &displayPositionX, 1, 0, ofGetWindowWidth(), "%.0f ms");
+        ImGui::DragInt("Y", &displayPositionY, 1, 0, ofGetWindowHeight(), "%.0f ms");
         ImGui::NextColumn();
         //
         ImGui::Text("Size");
-        ImGui::DragInt("W", &outputSizeW, 1, 1, ofGetWindowWidth()-outputPositionX, "%.0f px");
-        ImGui::DragInt("H", &outputSizeH, 1, 1, ofGetWindowHeight()-outputPositionY, "%.0f px");
+        if (ImGui::DragInt("W", &displaySizeW, 1, 1, ofGetWindowWidth()-displayPositionX, "%.0f px")) displayFbo.allocate(displaySizeW, displaySizeH);
+        if (ImGui::DragInt("H", &displaySizeH, 1, 1, ofGetWindowHeight()-displayPositionY, "%.0f px")) displayFbo.allocate(displaySizeW, displaySizeH);
         //
         ImGui::Columns(1);
         ImGui::Separator();
@@ -690,7 +713,7 @@ void ofApp::drawVideos() {
     int columns = sqrt(videosCount);
     if (videosVector.size()) {
         for(int i = 0; i < pow(columns,2); i++) {
-            videosVector[i%videosVector.size()].draw((i%columns)*outputSizeW/columns, (i/columns)*outputSizeH/columns, outputSizeW/columns, outputSizeW/columns);
+            videosVector[i%videosVector.size()].draw((i%columns)*displaySizeW/columns, (i/columns)*displaySizeH/columns, displaySizeW/columns, displaySizeW/columns);
         }
     }
 }

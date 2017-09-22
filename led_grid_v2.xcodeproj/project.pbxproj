@@ -69,6 +69,7 @@
 		E984796BE84AA4315636B6E7 /* imgui_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9CC36552DD0A47E758D71FB5 /* imgui_demo.cpp */; };
 		EBCDE831EFAE08274E799C97 /* Calibration.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 402C8F4015542356D362AC88 /* Calibration.cpp */; };
 		F5E5526E27B2A4D8E2B33210 /* VideoFrame.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C8D3643CA17BDD17F0696016 /* VideoFrame.cpp */; };
+		F6E7D6C01B3F2E112EB0533D /* ofxPostGlitch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40C409F696FE990F95E1B9D3 /* ofxPostGlitch.cpp */; };
 		F76B4A79BD8DE4854141CB47 /* fdog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A2D8249D46647E3C51769CDE /* fdog.cpp */; };
 		FB09C6B2A1DA0EA217240CB8 /* ofxCvGrayscaleImage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 057122A817D12571F8C0C7A4 /* ofxCvGrayscaleImage.cpp */; };
 /* End PBXBuildFile section */
@@ -168,6 +169,7 @@
 		3D2C3CDD948D95892CD56701 /* VideoFrame.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 30; name = VideoFrame.h; path = ../../../addons/ofxBlackmagic/src/VideoFrame.h; sourceTree = SOURCE_ROOT; };
 		4023D5F5704820DA0283E7E2 /* ofxAbletonLiveParameter.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 30; name = ofxAbletonLiveParameter.h; path = ../../../addons/ofxAbletonLive/src/ofxAbletonLiveParameter.h; sourceTree = SOURCE_ROOT; };
 		402C8F4015542356D362AC88 /* Calibration.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 30; name = Calibration.cpp; path = ../../../addons/ofxCv/libs/ofxCv/src/Calibration.cpp; sourceTree = SOURCE_ROOT; };
+		40C409F696FE990F95E1B9D3 /* ofxPostGlitch.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 30; name = ofxPostGlitch.cpp; path = ../../../addons/ofxPostGlitch/src/ofxPostGlitch.cpp; sourceTree = SOURCE_ROOT; };
 		40C841E81178E7BEFAAE9ABF /* ofxAbletonLiveClip.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 30; name = ofxAbletonLiveClip.cpp; path = ../../../addons/ofxAbletonLive/src/ofxAbletonLiveClip.cpp; sourceTree = SOURCE_ROOT; };
 		417A0B7154103C22ECC253E8 /* reduce_key_val.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 30; name = reduce_key_val.hpp; path = ../../../addons/ofxOpenCv/libs/opencv/include/opencv2/gpu/device/detail/reduce_key_val.hpp; sourceTree = SOURCE_ROOT; };
 		41E9090E543FC2D51BFD312C /* warp_reduce.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 30; name = warp_reduce.hpp; path = ../../../addons/ofxOpenCv/libs/opencv/include/opencv2/gpu/device/warp_reduce.hpp; sourceTree = SOURCE_ROOT; };
@@ -211,6 +213,7 @@
 		65EEFA3DA3526E9CDD9C21F9 /* ofxOscBundle.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 30; name = ofxOscBundle.cpp; path = ../../../addons/ofxOsc/src/ofxOscBundle.cpp; sourceTree = SOURCE_ROOT; };
 		665780A3005496E3A4A0D9EF /* compat.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 30; name = compat.hpp; path = ../../../addons/ofxOpenCv/libs/opencv/include/opencv2/legacy/compat.hpp; sourceTree = SOURCE_ROOT; };
 		67AF0E794FA186DD25454CC9 /* calib3d.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 30; name = calib3d.hpp; path = ../../../addons/ofxOpenCv/libs/opencv/include/opencv2/calib3d/calib3d.hpp; sourceTree = SOURCE_ROOT; };
+		67DBED026597C0EE427F0379 /* ofxPostGlitch.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 30; name = ofxPostGlitch.h; path = ../../../addons/ofxPostGlitch/src/ofxPostGlitch.h; sourceTree = SOURCE_ROOT; };
 		6940F9A28CDC85ED7D1847C1 /* emulation.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 30; name = emulation.hpp; path = ../../../addons/ofxOpenCv/libs/opencv/include/opencv2/gpu/device/emulation.hpp; sourceTree = SOURCE_ROOT; };
 		6B3CDFD1A15E92F074E7D5AE /* RunningBackground.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 30; name = RunningBackground.h; path = ../../../addons/ofxCv/libs/ofxCv/include/ofxCv/RunningBackground.h; sourceTree = SOURCE_ROOT; };
 		6B65E6930994CC4B2D2B8B33 /* OscPacketListener.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 30; name = OscPacketListener.h; path = ../../../addons/ofxOsc/libs/oscpack/src/osc/OscPacketListener.h; sourceTree = SOURCE_ROOT; };
@@ -999,6 +1002,15 @@
 			name = ofxOpenCv;
 			sourceTree = "<group>";
 		};
+		A15491832FCD72B40A572147 /* src */ = {
+			isa = PBXGroup;
+			children = (
+				40C409F696FE990F95E1B9D3 /* ofxPostGlitch.cpp */,
+				67DBED026597C0EE427F0379 /* ofxPostGlitch.h */,
+			);
+			name = src;
+			sourceTree = "<group>";
+		};
 		A5A3A2F98919E2243C73199C /* core */ = {
 			isa = PBXGroup;
 			children = (
@@ -1067,6 +1079,7 @@
 				768C3255AF2F3E1A78DC4DF4 /* ofxImGui */,
 				A0B90D3B0ADB9C1716816714 /* ofxOpenCv */,
 				E6053AB7FEC63D5F83825B88 /* ofxOsc */,
+				D92A719EC4DFB00CB4A3047D /* ofxPostGlitch */,
 				F57AC37CF6942008ABED8A1B /* ofxTimer */,
 				7652B9B7014C8450639DA55C /* ofxVideoRecorder */,
 			);
@@ -1233,6 +1246,14 @@
 				C0D6D9037F43491E1CE2E854 /* lib */,
 			);
 			name = Hap;
+			sourceTree = "<group>";
+		};
+		D92A719EC4DFB00CB4A3047D /* ofxPostGlitch */ = {
+			isa = PBXGroup;
+			children = (
+				A15491832FCD72B40A572147 /* src */,
+			);
+			name = ofxPostGlitch;
 			sourceTree = "<group>";
 		};
 		DCC60D6724B56635AE867535 /* libs */ = {
@@ -1541,6 +1562,7 @@
 				C4782ECC372420ACE0615B74 /* OscPrintReceivedElements.cpp in Sources */,
 				0546D1A38E13BD319CC9755B /* OscReceivedElements.cpp in Sources */,
 				879A251454401BC0B6E4F238 /* OscTypes.cpp in Sources */,
+				F6E7D6C01B3F2E112EB0533D /* ofxPostGlitch.cpp in Sources */,
 				E30C7DC0BD770DC8960DFAAC /* ofxTimer.cpp in Sources */,
 				D50B3D9655F08D2B232C1C4D /* ofxVideoRecorder.cpp in Sources */,
 			);
@@ -1639,6 +1661,7 @@
 					../../../addons/ofxOsc/libs/oscpack/src/ip/win32,
 					../../../addons/ofxOsc/libs/oscpack/src/osc,
 					../../../addons/ofxOsc/src,
+					../../../addons/ofxPostGlitch/src,
 					../../../addons/ofxTimer/src,
 					../../../addons/ofxVideoRecorder/src,
 				);
@@ -1742,6 +1765,7 @@
 					../../../addons/ofxOsc/libs/oscpack/src/ip/win32,
 					../../../addons/ofxOsc/libs/oscpack/src/osc,
 					../../../addons/ofxOsc/src,
+					../../../addons/ofxPostGlitch/src,
 					../../../addons/ofxTimer/src,
 					../../../addons/ofxVideoRecorder/src,
 				);
@@ -1839,6 +1863,7 @@
 					../../../addons/ofxOsc/libs/oscpack/src/ip/win32,
 					../../../addons/ofxOsc/libs/oscpack/src/osc,
 					../../../addons/ofxOsc/src,
+					../../../addons/ofxPostGlitch/src,
 					../../../addons/ofxTimer/src,
 					../../../addons/ofxVideoRecorder/src,
 				);
@@ -1937,6 +1962,7 @@
 					../../../addons/ofxOsc/libs/oscpack/src/ip/win32,
 					../../../addons/ofxOsc/libs/oscpack/src/osc,
 					../../../addons/ofxOsc/src,
+					../../../addons/ofxPostGlitch/src,
 					../../../addons/ofxTimer/src,
 					../../../addons/ofxVideoRecorder/src,
 				);

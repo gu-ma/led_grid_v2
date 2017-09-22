@@ -11,6 +11,7 @@
 #include "ofxHAPAVPlayer.h"
 #include "ofxBlackMagic.h"
 #include "ofxAbletonLive.h"
+#include "ofxPostGlitch.h"
 // local files
 #include "Clahe.h"
 #include "FaceUtils.h"
@@ -30,15 +31,18 @@ public:
     void draw();
     void exit();
     void keyPressed(int key);
+    void keyReleased(int key);
+
     
     // General
     void initVar();
     bool isIdle, facesFound, faceLocked, lockedFaceFound, showGrid, showText, newFrame, fullScreen, showTextUI, showTracker, showGUI;
-    ofFbo fbo;
-    int outputPositionX, outputPositionY, outputSizeW, outputSizeH;
+    ofFbo displayFbo, guiFbo;
+    int displayPositionX, displayPositionY, displaySizeW, displaySizeH;
     float sceneScale;
     void randomizeSettings();
     ofColor colorDark, colorBright;
+    
     // Draw
     void drawCounter(const int &x, const int &y);
     
@@ -128,5 +132,8 @@ public:
     vector<float> volumes, startVolumes, endVolumes, initTimesVolumes;
     bool resetLive;
     
+    // Glitches
+    ofxPostGlitch	glitch;
+
 };
 

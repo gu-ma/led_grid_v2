@@ -12,10 +12,11 @@
     "86145F1292B789AB93966AE12565F1D778504ABC" : 9223372036854775807,
     "39642EB9A7960140EE36619E322E5815FF36D10C" : 9223372036854775807,
     "3408B309914B0639E8D618139E80EF3032A46163" : 9223372036854775807,
+    "210A84CB64DBE001319448A793DFC671846EB46E" : 9223372036854775807,
     "E0535550E19824754C404DB0DDE5EC8ABB043726" : 9223372036854775807,
     "37526DA425E5430474A14FBFA1BC4525160B5FC1" : 9223372036854775807
   },
-  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "4ED77BD2-60D1-424E-9BA6-5DDAE7656771",
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "9CFD2288-ED02-45E6-925E-C829CB1BF4C2",
   "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
     "55505DE6675E1AEB4CF72AD63A972936EC984D97" : "..\/..\/addons\/ofxImGui",
     "FD7A2B89530BD82EBC2203E9CB0EF5DCD99A3FD5" : "led_grid_v2\/",
@@ -25,6 +26,7 @@
     "86145F1292B789AB93966AE12565F1D778504ABC" : "..\/..\/addons\/ofxEasing",
     "39642EB9A7960140EE36619E322E5815FF36D10C" : "..\/..\/addons\/ofxAbletonLive",
     "3408B309914B0639E8D618139E80EF3032A46163" : "..\/..\/addons\/ofxFaceTracker2",
+    "210A84CB64DBE001319448A793DFC671846EB46E" : "..\/..\/addons\/ofxPostGlitch",
     "E0535550E19824754C404DB0DDE5EC8ABB043726" : "..\/..\/addons\/ofxTimer",
     "37526DA425E5430474A14FBFA1BC4525160B5FC1" : "..\/..\/addons\/ofxCv"
   },
@@ -32,6 +34,11 @@
   "DVTSourceControlWorkspaceBlueprintVersion" : 204,
   "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "led_grid_v2.xcodeproj",
   "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/maxillacult\/ofxPostGlitch.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "210A84CB64DBE001319448A793DFC671846EB46E"
+    },
     {
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/gu-ma\/ofxFaceTracker2.git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
