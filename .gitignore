@@ -70,5 +70,5 @@ xcuserdata/
 *.m4v
 
 #folders
-bin/data/output/*
-bin/data/vids/*
+bin/data/output/
+bin/data/vids/

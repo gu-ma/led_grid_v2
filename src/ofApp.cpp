@@ -283,10 +283,10 @@ void ofApp::update(){
         if (showText) {
             int padding = 3*textScale, w = 32*textScale;
             drawTextFrame(textFont, textContent[textContentIndex], textX, textY, w, w, padding);
-            //            int padding = 4, s = 32, w = s*2;
-            //            if (textContentIndex==0) drawTextFrame(textFont, textContent[0], s*2, 0, w, w, padding);
-            //            if (textContentIndex==1) drawTextFrame(textFont, textContent[1], s, s*3, w, w, padding);
-            //            if (textContentIndex==2) drawTextFrame(textFont, textContent[2], s*4, s*4, w, w, padding);
+//            int padding = 4, s = 32, w = s*2;
+//            if (textContentIndex==0) drawTextFrame(textFont, textContent[0], s*2, 0, w, w, padding);
+//            if (textContentIndex==1) drawTextFrame(textFont, textContent[1], s, s*3, w, w, padding);
+//            if (textContentIndex==2) drawTextFrame(textFont, textContent[2], s*4, s*4, w, w, padding);
         }
         drawCounter(161,174);
     displayFbo.end();
