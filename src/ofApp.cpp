@@ -38,8 +38,22 @@ void ofApp::setup(){
 //--------------------------------------------------------------
 void ofApp::update(){
     
+    //
     live.update();
     refreshLive();
+    
+    //
+    noiseOfTime = ofSignedNoise(ofGetElapsedTimef()/noiseFreq,0);
+//    if (ofRandom(.5,1)<abs(noiseOfTime)) {
+//        // start glitch
+//        glitchOn = true;
+//        cout << "Glitch: start" << endl;
+//    }
+//    if (ofRandom(.5,1)<abs(noiseOfTime) && glitchOn) {
+//        // stop glitch
+//        cout << "Glitch: stop" << endl;
+//        glitchOn = false;
+//    }
 
     if (isIdle) updateVideos();
     
@@ -238,8 +252,8 @@ void ofApp::update(){
         ofPopMatrix();
         
         if (showTextUI) {
-            //        int x = srcImg.getWidth()*srcImgScale*sceneScale + 20;
-            int x = displaySizeW + 20;
+            int x = srcImg.getWidth()*srcImgScale*sceneScale + 20;
+//            int x = displaySizeW + 20;
             // Draw text UI
             ofDrawBitmapStringHighlight("Framerate : " + ofToString(ofGetFrameRate()), x, 20);
             ofDrawBitmapStringHighlight("Tracker thread framerate : " + ofToString(tracker.getThreadFps()), x, 40);
@@ -360,6 +374,7 @@ void ofApp::initVar(){
     showText = false, showTextUI = true, showTracker = true, showGUI = true;
     displayPositionX = 0, displayPositionY = 0, displaySizeW = 192, displaySizeH = 192, sceneScale = .5;
     colorDark = ofColor(100,0,0,230), colorBright = ofColor::crimson;
+    noiseOfTime = 0, noiseFreq = 30, fx1 = 0, fx2 = 0;
     
     // capture
     srcImgScale = .66666666666;
@@ -378,7 +393,7 @@ void ofApp::initVar(){
     trackerIsThreaded = false;
     //
     faceImgSize = 192, desiredLeftEyeX = 0.39, desiredLeftEyeY = 0.43, faceScaleRatio = 2.5;
-    faceRotate = true, faceConstrain = false;
+    faceRotate = true, faceConstrain = true;
 
     // filter
     filterClaheClipLimit = 6;
@@ -524,9 +539,12 @@ void ofApp::drawGui(){
         ImGui::Separator();
 
     }
-    if (ImGui::CollapsingHeader("Playback", false)) {
+    if (ImGui::CollapsingHeader("other", false)) {
         ImGui::Text("Overall");
         ImGui::SliderInt("videosCount", &videosCount, 1, 144);
+        ImGui::Text("Random");
+        ImGui::SliderFloat("Freq", &noiseFreq, 1, 300);
+        ImGui::SliderFloat("noiseOfTime", &noiseOfTime, -1, 1);
     }
     gui.end();
 }
@@ -669,7 +687,7 @@ void ofApp::drawTextFrame(const ofTrueTypeFont &txtFont, string &txt, const int 
         ofSetColor(0,230);
         ofDrawRectangle(x, y, w, h);
         ofSetColor(255);
-        txtFont.drawString(utils.wrapString(txt, w-padding*2, txtFont), x+padding, y+padding+1+txtFont.getSize()/2);
+        txtFont.drawString(utils.wrapString(txt, w-padding*2, txtFont), x+padding, y+padding*1.2+txtFont.getSize()/2);
     ofPopStyle();
 }
 
@@ -679,7 +697,7 @@ void ofApp::drawCounter(const int &x, const int &y) {
     ofPushStyle();
         ofPushMatrix();
             ofTranslate(x, y);
-            ofSetColor(colorBright);
+            ofSetColor(255);
 //            ofDrawCircle(6, 5, 1);
 //            ofDrawCircle(12, 5, 1);
 //            ofDrawRectangle(5, 10, 8, 1);
@@ -777,7 +795,7 @@ void ofApp::liveVolumeUp() {
     initTimesVolumes[1] = ofGetElapsedTimef(), startVolumes[1] = .5, endVolumes[1] = .9;
     initTimesVolumes[2] = ofGetElapsedTimef(), startVolumes[2] = .4, endVolumes[2] = .75;
     initTimesVolumes[3] = ofGetElapsedTimef(), startVolumes[3] = 0, endVolumes[3] = 0;
-    initTimesVolumes[4] = ofGetElapsedTimef(), startVolumes[4] = .6, endVolumes[4] = .7;
+    initTimesVolumes[4] = ofGetElapsedTimef(), startVolumes[4] = .45, endVolumes[4] = .7;
 }
 
 //--------------------------------------------------------------
@@ -786,5 +804,25 @@ void ofApp::liveVolumeDown() {
     initTimesVolumes[1] = ofGetElapsedTimef(), startVolumes[1] = .9, endVolumes[1] = .5;
     initTimesVolumes[2] = ofGetElapsedTimef(), startVolumes[2] = .75, endVolumes[2] = .4;
     initTimesVolumes[3] = ofGetElapsedTimef(), startVolumes[3] = 0, endVolumes[3] = 0;
-    initTimesVolumes[4] = ofGetElapsedTimef(), startVolumes[4] = .7, endVolumes[4] = .6;
+    initTimesVolumes[4] = ofGetElapsedTimef(), startVolumes[4] = .7, endVolumes[4] = .45;
 }
+
+
+// GLITCH
+//void ofApp::glitchStart(int fxID){
+//    if (fxID == '1') glitch.setFx(OFXPOSTGLITCH_CR_HIGHCONTRAST  , true);
+//    if (fxID == '2') glitch.setFx(OFXPOSTGLITCH_SHAKER           , true);
+//    if (fxID == '3') glitch.setFx(OFXPOSTGLITCH_CUTSLIDER		, true);
+//    if (fxID == '4') glitch.setFx(OFXPOSTGLITCH_NOISE			, true);
+//    if (fxID == '5') glitch.setFx(OFXPOSTGLITCH_SLITSCAN         , true);
+//    if (fxID == '6') glitch.setFx(OFXPOSTGLITCH_INVERT			, true);
+//}
+//
+//void ofApp::glitchStop() {
+//    if (fxID == '1') glitch.setFx(OFXPOSTGLITCH_CR_HIGHCONTRAST  , false);
+//    if (fxID == '2') glitch.setFx(OFXPOSTGLITCH_SHAKER           , false);
+//    if (fxID == '3') glitch.setFx(OFXPOSTGLITCH_CUTSLIDER		, false);
+//    if (fxID == '4') glitch.setFx(OFXPOSTGLITCH_NOISE			, false);
+//    if (fxID == '5') glitch.setFx(OFXPOSTGLITCH_SLITSCAN         , false);
+//    if (fxID == '6') glitch.setFx(OFXPOSTGLITCH_INVERT			, false);
+//}
