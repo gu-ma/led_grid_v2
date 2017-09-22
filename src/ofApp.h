@@ -19,7 +19,7 @@
 #include "MiscUtils.h"
 
 #define _USE_LIVE_VIDEO
-#define _USE_BLACKMAGIC
+//#define _USE_BLACKMAGIC
 
 
 class ofApp : public ofBaseApp{
@@ -33,7 +33,8 @@ public:
     
     // General
     void initVar();
-    bool isIdle, facesFound, faceLocked, lockedFaceFound, showGrid, showText, newFrame, fullScreen, showTextUI, showTracker;
+    bool isIdle, facesFound, faceLocked, lockedFaceFound, showGrid, showText, newFrame, fullScreen, showTextUI, showTracker, showGUI;
+    ofFbo fbo;
     int outputPositionX, outputPositionY, outputSizeW, outputSizeH;
     float sceneScale;
     void randomizeSettings();

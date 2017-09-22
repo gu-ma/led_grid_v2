@@ -3,16 +3,18 @@
 // CORE
 //--------------------------------------------------------------
 void ofApp::setup(){
-    ofSetLogLevel(OF_LOG_VERBOSE);
+//    ofSetLogLevel(OF_LOG_VERBOSE);
     ofSetFullscreen(true);
     ofSetBackgroundColor(0);
     ofTrueTypeFont::setGlobalDpi(72);
+    
+    fbo.allocate(ofGetWidth(), ofGetHeight());
     
     #ifdef _USE_LIVE_VIDEO
         #ifdef _USE_BLACKMAGIC
             blackCam.setup(1920, 1080, 30);
         #else
-            cam.setDeviceID(0); cam.setup(1920, 1080);
+            grabber.setDeviceID(0); grabber.setup(1920, 1080);
         #endif
     #else
         video.load("vids/motinas_multi_face_frontal.mp4"); video.play();
@@ -43,7 +45,7 @@ void ofApp::update(){
         #ifdef _USE_BLACKMAGIC
             newFrame = blackCam.update();
         #else
-            cam.update(); newFrame = cam.isFrameNew();
+            grabber.update(); newFrame = grabber.isFrameNew();
         #endif
     #else
         video.update(); newFrame = video.isFrameNew();
@@ -60,7 +62,7 @@ void ofApp::update(){
                 t.readToPixels(p);
                 srcImg.setFromPixels(p);
             #else
-                srcImg.setFromPixels(cam.getPixels());
+                srcImg.setFromPixels(grabber.getPixels());
             #endif
         #else
             srcImg.setFromPixels(video.getPixels());
@@ -126,8 +128,6 @@ void ofApp::update(){
                 faceLockedX = instance.getBoundingBox().getX(), faceLockedY = instance.getBoundingBox().getY();
                 // add image to vid recorder
                 if (vidRecorder.isInitialized()) vidRecorder.addFrame(img.getPixels());
-                //
-                cout << tracker.faceRectanglesTracker.getVelocity(0) << endl;
                 // update averages values
                 faceUtils.updateLandmarksAverage(instance);
                 // Push elements to the grid
@@ -204,69 +204,69 @@ void ofApp::update(){
     if (log.speechUpdate()) {
         textContent.at(textContentIndex).append(log.getCurrentWord() + " ");
     }
-}
-
-//--------------------------------------------------------------
-void ofApp::draw(){
     
+    // FBO
     ofImage alignedFace;
-    
-    // Draw source image + tracker
+    fbo.begin();
+    ofBackground(0);
     ofPushMatrix();
-        ofTranslate(0,outputSizeH);
-        ofScale(1/srcImgScale*sceneScale, 1/srcImgScale*sceneScale);
+    ofTranslate(0,outputSizeH);
+    ofScale(1/srcImgScale*sceneScale, 1/srcImgScale*sceneScale);
+    // Draw source image + tracker
+    if (showTracker) {
         srcImg.draw(0, 0);
         // Draw tracker landmarks
         tracker.drawDebug();
-        // Draw faces
-        for(int i=0; i<agedImages.size(); i++) {
-            agedImages[i].second.draw(i*faceImgSize, srcImg.getHeight());
-            if (agedImages[i].first == faceLockedLabel) {
-                ofPushStyle();
-                    ofNoFill();
-                    ofSetColor(colorBright);
-                    ofDrawRectangle(i*faceImgSize, srcImg.getHeight(), faceImgSize, faceImgSize);
-                ofPopStyle();
-                alignedFace = agedImages[i].second;
-            }
+    }
+    // Draw Faces
+    for(int i=0; i<agedImages.size(); i++) {
+        agedImages[i].second.draw(i*faceImgSize, (showTracker) ? srcImg.getHeight() : 0);
+        if (agedImages[i].first == faceLockedLabel) {
+            ofPushStyle();
+            ofNoFill();
+            ofSetColor(colorBright);
+            ofDrawRectangle(i*faceImgSize, (showTracker) ? srcImg.getHeight() : 0, faceImgSize, faceImgSize);
+            ofPopStyle();
+            alignedFace = agedImages[i].second;
         }
+    }
     ofPopMatrix();
     
     // Draw Output
     ofPushMatrix();
-        ofTranslate(outputPositionX, outputPositionY);
-        // Draw the videos if idle
-        if (isIdle) drawVideos();
-        // srcImg + tracker if no faces are locked
-        else if (!lockedFaceFound) {
-            // Draw srcImg
-            int cropW = srcImg.getHeight();
-            int cropH = srcImg.getHeight();
-            int cropX = (srcImgIsCropped) ? (srcImg.getWidth()-srcImg.getHeight())/2 : ofClamp(int(faceLockedX/640)*640, 0, srcImg.getWidth()-cropW);
-            int cropY = 0;
-            srcImg.drawSubsection(0, 0, outputSizeW, outputSizeH, cropX, cropY, cropW, cropH);
-            ofPushMatrix();
-                ofScale(outputSizeW/srcImg.getHeight(), outputSizeH/srcImg.getHeight());
-                ofTranslate(-cropX, cropY);
-                tracker.drawDebug();
-            ofPopMatrix();
-        } else alignedFace.draw(0, 0, outputSizeW, outputSizeH);
-        // Grid
-        if (showGrid) grid.draw(0,0);
-        // Text
-        if (showText) {
-            int padding = 2*textScale, w = 32*textScale;
-            drawTextFrame(textFont, textContent[textContentIndex], textX, textY, w, w, padding);
-//            int padding = 4, s = 32, w = s*2;
-//            if (textContentIndex==0) drawTextFrame(textFont, textContent[0], s*2, 0, w, w, padding);
-//            if (textContentIndex==1) drawTextFrame(textFont, textContent[1], s, s*3, w, w, padding);
-//            if (textContentIndex==2) drawTextFrame(textFont, textContent[2], s*4, s*4, w, w, padding);
-        }
-        drawCounter(161,174);
+    ofTranslate(outputPositionX, outputPositionY);
+    // Draw the videos if idle
+    if (isIdle) drawVideos();
+    // srcImg + tracker if no faces are locked
+    else if (!lockedFaceFound) {
+        // Draw srcImg
+        int s = srcImg.getHeight();
+        int cropW = s, cropH = s;
+        int cropX = (srcImgIsCropped) ? (srcImg.getWidth()-srcImg.getHeight())/2 : ofClamp(int(faceLockedX/s)*s, 0, srcImg.getWidth()-cropW);
+        int cropY = 0;
+        srcImg.drawSubsection(0, 0, outputSizeW, outputSizeH, cropX, cropY, cropW, cropH);
+        ofPushMatrix();
+        ofScale(outputSizeW/srcImg.getHeight(), outputSizeH/srcImg.getHeight());
+        ofTranslate(-cropX, cropY);
+        tracker.drawDebug();
+        ofPopMatrix();
+    } else alignedFace.draw(0, 0, outputSizeW, outputSizeH);
+    // Grid
+    if (showGrid) grid.draw(0,0);
+    // Text
+    if (showText) {
+        int padding = 3*textScale, w = 32*textScale;
+        drawTextFrame(textFont, textContent[textContentIndex], textX, textY, w, w, padding);
+        //            int padding = 4, s = 32, w = s*2;
+        //            if (textContentIndex==0) drawTextFrame(textFont, textContent[0], s*2, 0, w, w, padding);
+        //            if (textContentIndex==1) drawTextFrame(textFont, textContent[1], s, s*3, w, w, padding);
+        //            if (textContentIndex==2) drawTextFrame(textFont, textContent[2], s*4, s*4, w, w, padding);
+    }
+    drawCounter(161,174);
     ofPopMatrix();
     
     if (showTextUI) {
-//        int x = srcImg.getWidth()*srcImgScale*sceneScale + 20;
+        //        int x = srcImg.getWidth()*srcImgScale*sceneScale + 20;
         int x = outputSizeW + 20;
         // Draw text UI
         ofDrawBitmapStringHighlight("Framerate : " + ofToString(ofGetFrameRate()), x, 20);
@@ -284,9 +284,16 @@ void ofApp::draw(){
             ofDrawBitmapStringHighlight(idle, x, 60, ofColor(200,0,0), ofColor(255));
         }
     }
+    fbo.end();
+}
+
+//--------------------------------------------------------------
+void ofApp::draw(){
+
+    fbo.draw(0,0);
 
     // Draw GUI
-    drawGui();
+    if (showGUI) drawGui();
 }
 
 //--------------------------------------------------------------
@@ -302,6 +309,8 @@ void ofApp::exit(){
 void ofApp::keyPressed(int key){
     if (key == ' ') faceLocked = false;
     if(key == 't') showTextUI = !showTextUI;
+    if(key == 'r') showTracker = !showTracker;
+    if(key == 'g') showGUI = !showGUI;
     if(key == 'f'){
         fullScreen = !fullScreen;
         if(fullScreen) ofSetFullscreen(true);
@@ -325,7 +334,7 @@ void ofApp::keyPressed(int key){
 //--------------------------------------------------------------
 void ofApp::initVar(){
     // general
-    isIdle = false, facesFound = false, lockedFaceFound = false,  faceLocked = false, showGrid = false, showText = false, showTextUI = true;
+    isIdle = false, facesFound = false, lockedFaceFound = false,  faceLocked = false, showGrid = false, showText = false, showTextUI = true, showTracker = true, showGUI = true;
     outputPositionX = 0, outputPositionY = 0, outputSizeW = 192, outputSizeH = 192, sceneScale = .5;
     colorDark = ofColor(100,0,0,230), colorBright = ofColor::crimson;
     
@@ -345,7 +354,7 @@ void ofApp::initVar(){
     secondToAgeCoef = 140, ageToLock = timeToLock / secondToAgeCoef;
     trackerIsThreaded = false;
     //
-    faceImgSize = 256, desiredLeftEyeX = 0.39, desiredLeftEyeY = 0.43, faceScaleRatio = 2.1;
+    faceImgSize = 192, desiredLeftEyeX = 0.39, desiredLeftEyeY = 0.43, faceScaleRatio = 2.5;
     faceRotate = true, faceConstrain = false;
 
     // filter
@@ -389,7 +398,7 @@ void ofApp::randomizeSettings(){
     if (mixElements) elementsID = int(ofRandom(5));
     if (ofRandom(1)>.5) offsetElements = !offsetElements;
     // Video Playback
-    vector<int> s = {1, 2, 3, 6, 12};
+    vector<int> s = {1, 2, 3, 6, 8};
     int r = s[(int)ofRandom(0,s.size())];
     videosCount = pow(r,2);
     // face
@@ -637,7 +646,7 @@ void ofApp::drawTextFrame(const ofTrueTypeFont &txtFont, string &txt, const int 
         ofSetColor(0,230);
         ofDrawRectangle(x, y, w, h);
         ofSetColor(255);
-        txtFont.drawString(utils.wrapString(txt, w-padding*2, txtFont), x+padding, y+padding+txtFont.getSize()*.6);
+        txtFont.drawString(utils.wrapString(txt, w-padding*2, txtFont), x+padding, y+padding+txtFont.getSize()/2);
     ofPopStyle();
 }
 
@@ -710,11 +719,11 @@ void ofApp::initLive(){
             ofxAbletonLiveTrack *track = live.getTrack(x);
             track->setVolume(0);
         }
-        live.setVolume(0.8);
+        live.setVolume(.8);
         live.stop();
         live.play();
-        live.setTempo(60);
-        
+        live.setTempo(90);
+        liveVolumeDown();
     }
 }
 
@@ -741,18 +750,18 @@ void ofApp::refreshLive() {
 
 //--------------------------------------------------------------
 void ofApp::liveVolumeUp() {
-    initTimesVolumes[0] = ofGetElapsedTimef(), startVolumes[0] = .4, endVolumes[0] = .9;
-    initTimesVolumes[1] = ofGetElapsedTimef(), startVolumes[1] = .3, endVolumes[1] = .6;
-    initTimesVolumes[2] = ofGetElapsedTimef(), startVolumes[2] = .3, endVolumes[2] = .6;
-    initTimesVolumes[3] = ofGetElapsedTimef(), startVolumes[3] = .4, endVolumes[3] = .6;
-    initTimesVolumes[4] = ofGetElapsedTimef(), startVolumes[4] = .3, endVolumes[4] = .8;
+    initTimesVolumes[0] = ofGetElapsedTimef(), startVolumes[0] = 0, endVolumes[0] = 0;
+    initTimesVolumes[1] = ofGetElapsedTimef(), startVolumes[1] = .5, endVolumes[1] = .9;
+    initTimesVolumes[2] = ofGetElapsedTimef(), startVolumes[2] = .4, endVolumes[2] = .75;
+    initTimesVolumes[3] = ofGetElapsedTimef(), startVolumes[3] = 0, endVolumes[3] = 0;
+    initTimesVolumes[4] = ofGetElapsedTimef(), startVolumes[4] = .6, endVolumes[4] = .7;
 }
 
 //--------------------------------------------------------------
 void ofApp::liveVolumeDown() {
-    initTimesVolumes[0] = ofGetElapsedTimef(), startVolumes[0] = .9, endVolumes[0] = .4;
-    initTimesVolumes[1] = ofGetElapsedTimef(), startVolumes[1] = .6, endVolumes[1] = .3;
-    initTimesVolumes[2] = ofGetElapsedTimef(), startVolumes[2] = .6, endVolumes[2] = .3;
-    initTimesVolumes[3] = ofGetElapsedTimef(), startVolumes[3] = .6, endVolumes[3] = .4;
-    initTimesVolumes[4] = ofGetElapsedTimef(), startVolumes[4] = .8, endVolumes[4] = .3;
+    initTimesVolumes[0] = ofGetElapsedTimef(), startVolumes[0] = 0, endVolumes[0] = 0;
+    initTimesVolumes[1] = ofGetElapsedTimef(), startVolumes[1] = .9, endVolumes[1] = .5;
+    initTimesVolumes[2] = ofGetElapsedTimef(), startVolumes[2] = .75, endVolumes[2] = .4;
+    initTimesVolumes[3] = ofGetElapsedTimef(), startVolumes[3] = 0, endVolumes[3] = 0;
+    initTimesVolumes[4] = ofGetElapsedTimef(), startVolumes[4] = .7, endVolumes[4] = .6;
 }
