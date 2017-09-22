@@ -350,7 +350,7 @@ void ofApp::initVar(){
     timeToShowNextText = 5000; // time before showing the next bunch of text
 
     // tracker
-    trackerFaceDetectorImageSize = 20000000, trackerLandmarkDetectorImageSize = 20000000;
+    trackerFaceDetectorImageSize = 1000000, trackerLandmarkDetectorImageSize = 2000000;
     secondToAgeCoef = 140, ageToLock = timeToLock / secondToAgeCoef;
     trackerIsThreaded = false;
     //
@@ -646,7 +646,7 @@ void ofApp::drawTextFrame(const ofTrueTypeFont &txtFont, string &txt, const int 
         ofSetColor(0,230);
         ofDrawRectangle(x, y, w, h);
         ofSetColor(255);
-        txtFont.drawString(utils.wrapString(txt, w-padding*2, txtFont), x+padding, y+padding+txtFont.getSize()/2);
+        txtFont.drawString(utils.wrapString(txt, w-padding*2, txtFont), x+padding, y+padding+1+txtFont.getSize()/2);
     ofPopStyle();
 }
 
