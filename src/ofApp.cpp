@@ -47,29 +47,16 @@ void ofApp::update(){
     if (int(ofGetElapsedTimef())%2 == 0) {
         if (!glitchOn) {
             if (ofRandom(0, abs(noiseOfTime))>.5) {
-                cout << "Glitch: start" << endl;
                 glitchStart();
-                glitchOn = true;
             }
         } else {
             if (ofRandom(0, abs(noiseOfTime))>.5) {
-                cout << "Glitch: stop" << endl;
                 glitchStop();
-                glitchOn = false;
             }
         }
     }
-//    if (ofRandom(.5,1)<abs(noiseOfTime)) {
-//        // start glitch
-//        glitchOn = true;
-//        cout << "Glitch: start" << endl;
-//    }
-//    if (ofRandom(.5,1)<abs(noiseOfTime) && glitchOn) {
-//        // stop glitch
-//        cout << "Glitch: stop" << endl;
-//        glitchOn = false;
-//    }
 
+    //
     if (isIdle) updateVideos();
     
     // ============
@@ -399,8 +386,8 @@ void ofApp::initVar(){
     timeToWake = 2000; // time before exiting idle mode
     timeToLock = 2000, // Time before locking up a face
     timeToShowGrid = 2000; // time before grid
-    timeToShowText = 6000; // time before showing the text
-    timeToShowNextText = 5000; // time before showing the next bunch of text
+    timeToShowText = 4000; // time before showing the text
+    timeToShowNextText = 4000; // time before showing the next bunch of text
 
     // tracker
     trackerFaceDetectorImageSize = 1000000, trackerLandmarkDetectorImageSize = 2000000;
@@ -408,7 +395,7 @@ void ofApp::initVar(){
     trackerIsThreaded = false;
     //
     faceImgSize = 192, desiredLeftEyeX = 0.39, desiredLeftEyeY = 0.43, faceScaleRatio = 2.5;
-    faceRotate = true, faceConstrain = true;
+    faceRotate = true, faceConstrain = false;
 
     // filter
     filterClaheClipLimit = 6;
@@ -790,7 +777,7 @@ void ofApp::refreshLive() {
         initLive();
         resetLive = false;
     }
-    // Easing
+    // Easing of volumes
     auto duration = 2.f;
     for (int i=0; i<volumes.size(); i++) {
         if ( initTimesVolumes.at(i)!=0 ) {
@@ -801,6 +788,17 @@ void ofApp::refreshLive() {
     }
     // set volumes
     for ( int i=0; i<live.getNumTracks() ; i++ ) live.getTrack(i)->setVolume(volumes[i]);
+    // Distortion for glitches
+    if (glitchOn) {
+        live.getTrack(1)->getDevice("Crew Cut")->getParameter("Dry/Wet")->setValue(abs(noiseOfTime));
+        live.getTrack(2)->getDevice("Crew Cut")->getParameter("Dry/Wet")->setValue(abs(noiseOfTime));
+        live.getTrack(4)->getDevice("Distort")->getParameter("Drive")->setValue(abs(noiseOfTime)*100);
+    } else {
+        live.getTrack(1)->getDevice("Crew Cut")->getParameter("Dry/Wet")->setValue(.1);
+        live.getTrack(2)->getDevice("Crew Cut")->getParameter("Dry/Wet")->setValue(.1);
+        live.getTrack(4)->getDevice("Distort")->getParameter("Drive")->setValue(20);
+    }
+
     
 }
 
@@ -833,13 +831,13 @@ void ofApp::glitchStart(){
             changeGlitchState(ofRandom(1,7), true);
         };
     };
+    glitchOn = true;
 }
 
 //--------------------------------------------------------------
 void ofApp::glitchStop() {
-    for (int i=1; i<=6; i++) {
-        changeGlitchState(i, false);
-    }
+    for (int i=1; i<=6; i++) changeGlitchState(i, false);
+    glitchOn = false;
 }
 
 //--------------------------------------------------------------
