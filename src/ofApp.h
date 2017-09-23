@@ -41,11 +41,11 @@ public:
     ofFbo displayFbo, guiFbo;
     int displayPositionX, displayPositionY, displaySizeW, displaySizeH;
     bool glitchOn;
-    int fx1, fx2;
     float sceneScale;
     void randomizeSettings();
     // Glitch
-    float noiseOfTime, noiseFreq;
+    float noiseOfTime, noiseFreq, glitchThresold;
+    int glitchFreq; // the higher the less often
     void glitchStart(), glitchStop();
     void changeGlitchState(int id, bool state);
     

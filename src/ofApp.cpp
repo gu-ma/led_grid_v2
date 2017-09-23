@@ -44,13 +44,14 @@ void ofApp::update(){
     
     //
     noiseOfTime = ofSignedNoise(ofGetElapsedTimef()/noiseFreq,0);
-    if (int(ofGetElapsedTimef())%2 == 0) {
+    if (int(ofGetElapsedTimef())%glitchFreq == 0) {
+        float rand = ofRandom(0, abs(noiseOfTime));
         if (!glitchOn) {
-            if (ofRandom(0, abs(noiseOfTime))>.5) {
+            if (rand>glitchThresold) {
                 glitchStart();
             }
         } else {
-            if (ofRandom(0, abs(noiseOfTime))>.5) {
+            if (rand>glitchThresold) {
                 glitchStop();
             }
         }
@@ -376,7 +377,7 @@ void ofApp::initVar(){
     showText = false, showTextUI = true, showTracker = true, showGUI = true;
     displayPositionX = 0, displayPositionY = 0, displaySizeW = 192, displaySizeH = 192, sceneScale = .5;
     colorDark = ofColor(100,0,0,230), colorBright = ofColor::crimson;
-    noiseOfTime = 0, noiseFreq = 30, fx1 = 0, fx2 = 0;
+    noiseOfTime = 0, noiseFreq = 30, glitchThresold = .5, glitchFreq = 2;
     
     // capture
     srcImgScale = .66666666666;
@@ -544,8 +545,10 @@ void ofApp::drawGui(){
     if (ImGui::CollapsingHeader("other", false)) {
         ImGui::Text("Overall");
         ImGui::SliderInt("videosCount", &videosCount, 1, 144);
-        ImGui::Text("Random");
+        ImGui::Text("Glitch: %.c", glitchOn);
         ImGui::SliderFloat("Freq", &noiseFreq, 1, 300);
+        ImGui::SliderFloat("glitchThresold", &glitchThresold, .1, 1);
+        ImGui::SliderInt("Freq (higher = less often)", &glitchFreq, 1, 10);
         ImGui::SliderFloat("noiseOfTime", &noiseOfTime, -1, 1);
     }
     gui.end();
