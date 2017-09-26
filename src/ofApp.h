@@ -20,7 +20,7 @@
 #include "MiscUtils.h"
 
 #define _USE_LIVE_VIDEO
-//#define _USE_BLACKMAGIC
+#define _USE_BLACKMAGIC
 
 
 class ofApp : public ofBaseApp{

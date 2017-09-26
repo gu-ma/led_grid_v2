@@ -380,7 +380,7 @@ void ofApp::initVar(){
     noiseOfTime = 0, noiseFreq = 30, glitchThresold = .5, glitchFreq = 2;
     
     // capture
-    srcImgScale = .66666666666;
+    srcImgScale = 1;
     
     // timers
     timeToSleep = 6000; // time before entering idle mode
@@ -391,7 +391,7 @@ void ofApp::initVar(){
     timeToShowNextText = 4000; // time before showing the next bunch of text
 
     // tracker
-    trackerFaceDetectorImageSize = 1000000, trackerLandmarkDetectorImageSize = 2000000;
+    trackerFaceDetectorImageSize = 1300000, trackerLandmarkDetectorImageSize = 2000000;
     secondToAgeCoef = 140, ageToLock = timeToLock / secondToAgeCoef;
     trackerIsThreaded = false;
     //
@@ -399,8 +399,8 @@ void ofApp::initVar(){
     faceRotate = true, faceConstrain = false;
 
     // filter
-    filterClaheClipLimit = 6;
-    srcImgIsCropped = true, srcImgIsFiltered = true, srcImgIsColored = false;
+    filterClaheClipLimit = 4;
+    srcImgIsCropped = false, srcImgIsFiltered = true, srcImgIsColored = false;
     
     // video recording + playing
     faceVideoPath = "output"; videosCount = 64;
