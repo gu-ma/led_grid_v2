@@ -6,12 +6,12 @@
 
 * Ableton Live
 * [iZotope Vocal Synth](https://mac-torrent-download.net/izotope-vocalsynth-1-0-0c/)
-* [Soundflower](https://theapkwire.com/soundflower-for-mac/)
-* [LiveOSC](https://livecontrol.q3f.org/ableton-liveapi/liveosc/)
+* [Soundflower](https://github.com/mattingalls/Soundflower/releases)
+* [LiveOSC](https://livecontrol.q3f.org/ableton-liveapi/liveosc/) + [fix](http://disq.us/p/15j82c7)
 
 ### OF
 
-* OFX (9.8 10.XX ??) to compile
+* OFX (9.7, not tested with OF10) to compile
 * [OFXBlackMagic](https://github.com/kylemcdonald/ofxBlackmagic)
 * Addons (see /bin/data/scripts/of_addons_setup.sh)
   * "ofxFaceTracker2.h"
