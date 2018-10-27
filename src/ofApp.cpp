@@ -13,7 +13,7 @@ void ofApp::setup(){
         #ifdef _USE_BLACKMAGIC
             blackCam.setup(1920, 1080, 30);
         #else
-            grabber.setDeviceID(0); grabber.setup(1920, 1080);
+            grabber.setDeviceID(1); grabber.setup(1920, 1080);
         #endif
     #else
         video.load("vids/motinas_multi_face_frontal.mp4"); video.play();
