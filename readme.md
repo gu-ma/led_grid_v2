@@ -7,7 +7,7 @@
 * Ableton Live
 * [iZotope Vocal Synth](https://mac-torrent-download.net/izotope-vocalsynth-1-0-0c/)
 * [Soundflower](https://github.com/mattingalls/Soundflower/releases)
-* [LiveOSC](https://livecontrol.q3f.org/ableton-liveapi/liveosc/) + [fix](http://disq.us/p/15j82c7)
+* [LiveOSC](https://livecontrol.q3f.org/ableton-liveapi/liveosc/) + [fix](http://disq.us/p/15j82c7) OR is it [this one](https://github.com/stufisher/LiveOSC2)
 
 ### OF
 
