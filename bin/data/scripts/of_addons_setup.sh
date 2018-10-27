@@ -1,6 +1,6 @@
 read -p "Make sure you're CD in your OFX Addon directory"
 # installing addons
-git clone https://github.com/gu-ma/ofxFaceTracker2/ofxFaceTracker2.git
+git clone https://github.com/gu-ma/ofxFaceTracker2.git
 git clone https://github.com/timscaffidi/ofxVideoRecorder.git
 git clone https://github.com/jvcleave/ofxImGui.git
 git clone https://github.com/kylemcdonald/ofxCv.git
