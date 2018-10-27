@@ -13,7 +13,7 @@ void ofApp::setup(){
         #ifdef _USE_BLACKMAGIC
             blackCam.setup(1920, 1080, 30);
         #else
-            grabber.setDeviceID(0); grabber.setup(1920, 1080);
+            grabber.setDeviceID(1); grabber.setup(1024, 576);
         #endif
     #else
         video.load("vids/motinas_multi_face_frontal.mp4"); video.play();
@@ -29,7 +29,7 @@ void ofApp::setup(){
     //
     displayFbo.allocate(displaySizeW, displaySizeH);
     guiFbo.allocate(ofGetWidth(), ofGetHeight());
-    glitch.setup(&displayFbo);
+//    glitch.setup(&displayFbo);
 
 
 
@@ -383,7 +383,7 @@ void ofApp::initVar(){
     srcImgScale = .66666666666;
     
     // timers
-    timeToSleep = 6000; // time before entering idle mode
+    timeToSleep = 600000; // time before entering idle mode
     timeToWake = 2000; // time before exiting idle mode
     timeToLock = 2000, // Time before locking up a face
     timeToShowGrid = 2000; // time before grid
